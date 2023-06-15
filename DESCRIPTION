@@ -1,0 +1,13 @@
+Package: spacrt
+Title: Saddlepoint CRT
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Eugene", "Katsevich", , "ekatsevi@wharton.upenn.edu", role = c("aut", "cre")),
+    person("Jyotishka", "Choudhury", , "jyotishkaraychoudhury@gmail.com", role = c("aut")),
+    person("Ziang", "Niu", , "ziangniu@upenn.edu", role = c("aut"))
+    )
+Description: Saddlepoint CRT.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.0
