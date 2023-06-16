@@ -33,3 +33,14 @@ is returned only if \code{return_resamples == TRUE}.
 \description{
 \code{dCRT} is a function carrying out the dCRT based on GLMs for X|Z and Y|Z.
 }
+\examples{
+n <- 20; p <- 2; B <- 100; normalize <- FALSE; return_resamples <- FALSE
+data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
+             Y = rpois(n = n, lambda = 1),
+             Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+X_on_Z_fam <- "binomial"
+Y_on_Z_fam <- "poisson"
+results <- dCRT(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples)
+results$test_stat
+results$p_value
+}

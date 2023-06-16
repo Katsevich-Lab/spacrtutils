@@ -12,6 +12,16 @@
 #'
 #' @return A named list with fields \code{test_stat} and \code{p_value}.
 #'
+#' @examples
+#' n <- 20; p <- 2
+#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
+#'              Y = rpois(n = n, lambda = 1),
+#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+#' X_on_Z_fam <- "binomial"
+#' Y_on_Z_fam <- "poisson"
+#' results <- GCM(data, X_on_Z_fam, Y_on_Z_fam)
+#' results$test_stat
+#' results$p_value
 #' @export
 GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
 }
@@ -37,6 +47,16 @@ GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
 #' \code{resamples}. Here, \code{resamples} is a vector of length \code{B}. It
 #' is returned only if \code{return_resamples == TRUE}.
 #'
+#' @examples
+#' n <- 20; p <- 2; B <- 100; normalize <- FALSE; return_resamples <- FALSE
+#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
+#'              Y = rpois(n = n, lambda = 1),
+#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+#' X_on_Z_fam <- "binomial"
+#' Y_on_Z_fam <- "poisson"
+#' results <- dCRT(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples)
+#' results$test_stat
+#' results$p_value
 #' @export
 dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples) {
 }
@@ -55,6 +75,17 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples) {
 #' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 #' @param normalize A logical variable indicating whether the spaCRT is based on
 #' the normalized test statistic.
+#'
+#' @examples
+#' n <- 20; p <- 2; normalize <- FALSE
+#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
+#'              Y = rpois(n = n, lambda = 1),
+#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+#' X_on_Z_fam <- "binomial"
+#' Y_on_Z_fam <- "poisson"
+#' results <- spaCRT(data, X_on_Z_fam, Y_on_Z_fam, normalize)
+#' results$test_stat
+#' results$p_value
 #'
 #' @return A named list with fields \code{test_stat} and \code{p_value}.
 #'
