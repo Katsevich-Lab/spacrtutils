@@ -4,7 +4,7 @@
 \alias{spaCRT}
 \title{The saddlepoint approximation to the dCRT.}
 \usage{
-spaCRT(data, X_on_Z_fam, Y_on_Z_fam, normalize)
+spaCRT(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf)
 }
 \arguments{
 \item{data}{A named list with fields \code{X} (an nx1 vector for the predictor
@@ -19,16 +19,22 @@ variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
 
 \item{normalize}{A logical variable indicating whether the spaCRT is based on
 the normalized test statistic.}
+
+\item{return_cdf}{A logical variable indicating whether to return the CDF}
 }
 \value{
-A named list with fields \code{test_stat} and \code{p_value}.
+A named list with fields \code{test_stat}, \code{p_value}, and
+\code{cdf}. Here, cdf is a function that takes in a value t and returns the
+saddlepoint approximation to the CDF of the resampling distribution of the
+test statistic evaluated at t. This function is returned only if
+return_cdf == TRUE.
 }
 \description{
 \code{spaCRT} is a function carrying out the saddlepoint approximation to the
 dCRT based on GLMs for X|Z and Y|Z.
 }
 \examples{
-n <- 20; p <- 2; normalize <- FALSE
+n <- 20; p <- 2; normalize <- FALSE; return_cdf <- FALSE
 data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
              Y = rpois(n = n, lambda = 1),
              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))

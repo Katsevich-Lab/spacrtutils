@@ -89,9 +89,10 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples) {
 #' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 #' @param normalize A logical variable indicating whether the spaCRT is based on
 #' the normalized test statistic.
+#' @param return_cdf A logical variable indicating whether to return the CDF
 #'
 #' @examples
-#' n <- 20; p <- 2; normalize <- FALSE
+#' n <- 20; p <- 2; normalize <- FALSE; return_cdf <- FALSE
 #' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
 #'              Y = rpois(n = n, lambda = 1),
 #'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
@@ -101,8 +102,12 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples) {
 #' results$test_stat
 #' results$p_value
 #'
-#' @return A named list with fields \code{test_stat} and \code{p_value}.
+#' @return A named list with fields \code{test_stat}, \code{p_value}, and
+#' \code{cdf}. Here, cdf is a function that takes in a value t and returns the
+#' saddlepoint approximation to the CDF of the resampling distribution of the
+#' test statistic evaluated at t. This function is returned only if
+#' return_cdf == TRUE.
 #'
 #' @export
-spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize) {
+spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
 }
