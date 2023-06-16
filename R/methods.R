@@ -24,6 +24,20 @@
 #' results$p_value
 #' @export
 GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
+  # extract (X,Y,Z) from inputted data
+  X <- data$X; Y <- data$Y; Z <- data$Z
+  # fit X on Z and Y on Z regressions
+  X_on_Z_fit <- glm(X ~ Z, family = X_on_Z_fam)
+  Y_on_Z_fit <- glm(Y ~ Z, family = Y_on_Z_fam)
+  # compute the products of residuals for each observation
+  prod_resids <- (X-X_on_Z_fit$fitted.values)*(Y-Y_on_Z_fit$fitted.values)
+  # compute the test statistic
+  n <- length(X)
+  test_stat <- 1/sqrt(n)*sum(prod_resids)/sd(prod_resids)
+  # compute the p-value by comparing test statistic to normal distribution
+  p_value <- 2*pnorm(abs(test_stat), lower.tail = FALSE)
+  # return test statistic and p-value
+  list(test_stat = test_stat, p_value = p_value)
 }
 
 #' The distilled conditional randomization test.
