@@ -73,6 +73,7 @@ GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
 #' results$p_value
 #' @export
 dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples) {
+  # Test
 }
 
 #' The saddlepoint approximation to the dCRT.
