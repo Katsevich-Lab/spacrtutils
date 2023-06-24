@@ -4,7 +4,14 @@
 \alias{dCRT}
 \title{The distilled conditional randomization test.}
 \usage{
-dCRT(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples)
+dCRT(
+  data,
+  X_on_Z_fam,
+  Y_on_Z_fam,
+  B,
+  normalize = FALSE,
+  return_resamples = FALSE
+)
 }
 \arguments{
 \item{data}{A named list with fields \code{X} (an nx1 vector for the predictor
