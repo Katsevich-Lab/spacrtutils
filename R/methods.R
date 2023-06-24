@@ -1,3 +1,4 @@
+#####################################################################################
 #' The generalized covariance measure test of Shah and Peters.
 #'
 #' \code{GCM} is a function carrying out the GCM test based on GLMs for X|Z and Y|Z.
@@ -40,6 +41,8 @@ GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
   list(test_stat = test_stat, p_value = p_value)
 }
 
+
+#####################################################################################
 #' The distilled conditional randomization test.
 #'
 #' \code{dCRT} is a function carrying out the dCRT based on GLMs for X|Z and Y|Z.
@@ -72,10 +75,36 @@ GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
 #' results$test_stat
 #' results$p_value
 #' @export
-dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples) {
-  # Test
+dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resamples = FALSE) {
+
+  X <- data$X; Y <- data$Y; Z <- data$Z
+  n <- length(X)
+
+  X_on_Z_fit <- stats::glm(X ~ Z, family = X_on_Z_fam)
+  Y_on_Z_fit <- stats::glm(Y ~ Z, family = Y_on_Z_fam)
+
+  prod_resids <- (X - X_on_Z_fit$fitted.values)*(Y - Y_on_Z_fit$fitted.values)
+
+  test_stat <- 1/sqrt(n) * sum(prod_resids) #/stats::sd(prod_resids)
+
+  resamp_X <- list()
+  prod_resid_resamp <- c()
+
+  for(b in 1:B){
+    resamp_X[[b]] <- cbind(1,Z) %*% as.matrix(X_on_Z_fit$coefficients) %>%
+                        sapply(function(val) rbinom(1, 1, expit(val)))
+
+    prod_resid_resamp[b] <- 1/sqrt(n) * sum((resamp_X[[b]] - X_on_Z_fit$fitted.values)*
+                                                  (Y - Y_on_Z_fit$fitted.values))
+  }
+
+  p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))
+
+  return(list(test_stat = test_stat, p_value = p_value))
 }
 
+
+#####################################################################################
 #' The saddlepoint approximation to the dCRT.
 #'
 #' \code{spaCRT} is a function carrying out the saddlepoint approximation to the
@@ -111,4 +140,12 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize, return_resamples) {
 #'
 #' @export
 spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
+
+  X <- data$X; Y <- data$Y; Z <- data$Z
+  n <- length(X)
+
+  X_on_Z_fit <- stats::glm(X ~ Z, family = X_on_Z_fam)
+  Y_on_Z_fit <- stats::glm(Y ~ Z, family = Y_on_Z_fam)
+
+
 }
