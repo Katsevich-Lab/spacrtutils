@@ -85,17 +85,16 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resa
 
   prod_resids <- (X - X_on_Z_fit$fitted.values)*(Y - Y_on_Z_fit$fitted.values)
 
-  test_stat <- 1/sqrt(n) * sum(prod_resids) #/stats::sd(prod_resids)
+  test_stat <- 1/sqrt(n) * sum(prod_resids) #/stats::sd(prod_resids)A
 
-  resamp_X <- list()
   prod_resid_resamp <- c()
 
   for(b in 1:B){
-    resamp_X[[b]] <- cbind(1,Z) %*% as.matrix(X_on_Z_fit$coefficients) %>%
-                        sapply(function(val) rbinom(1, 1, expit(val)))
+    resamp_X <- stats::rbinom(n = n, size = 1, prob = X_on_Z_fit$fitted.values)
 
-    prod_resid_resamp[b] <- 1/sqrt(n) * sum((resamp_X[[b]] - X_on_Z_fit$fitted.values)*
+    prod_resid_resamp[b] <- 1/sqrt(n) * sum((resamp_X - X_on_Z_fit$fitted.values)*
                                                   (Y - Y_on_Z_fit$fitted.values))
+    print(b)
   }
 
   p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))
