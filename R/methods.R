@@ -76,29 +76,29 @@ GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
 #' results$p_value
 #' @export
 dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resamples = FALSE) {
-
+  # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
-
+  # fit X on Z and Y on Z regressions
   X_on_Z_fit <- stats::glm(X ~ Z, family = X_on_Z_fam)
   Y_on_Z_fit <- stats::glm(Y ~ Z, family = Y_on_Z_fam)
-
+  # compute the products of residuals for each observation
   prod_resids <- (X - X_on_Z_fit$fitted.values)*(Y - Y_on_Z_fit$fitted.values)
-
+  # compute the test statistic
   test_stat <- 1/sqrt(n) * sum(prod_resids)
 
   prod_resid_resamp <- c()
 
   for(b in 1:B){
+    # resampling X from X|Z
     resamp_X <- stats::rbinom(n = n, size = 1, prob = X_on_Z_fit$fitted.values)
-
+    # compute the products of residuals for each resampled observation
     prod_resid_resamp[b] <- 1/sqrt(n) * sum((resamp_X - X_on_Z_fit$fitted.values)*
                                                   (Y - Y_on_Z_fit$fitted.values))
-    # print(b)
   }
-
+  # compute the p-value by comparing test statistic to normal distribution
   p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))
-
+  # return test statistic and p-value
   return(list(test_stat = test_stat, p_value = p_value))
 }
 
