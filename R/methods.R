@@ -79,9 +79,11 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resa
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
+
   # fit X on Z and Y on Z regressions
   X_on_Z_fit <- stats::glm(X ~ Z, family = X_on_Z_fam)
   Y_on_Z_fit <- stats::glm(Y ~ Z, family = Y_on_Z_fam)
+
   # compute the products of residuals for each observation
   prod_resids <- (X - X_on_Z_fit$fitted.values)*(Y - Y_on_Z_fit$fitted.values)
   # compute the test statistic
@@ -95,9 +97,16 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resa
     # compute the products of residuals for each resampled observation
     prod_resid_resamp[b] <- 1/sqrt(n) * sum((resamp_X - X_on_Z_fit$fitted.values)*
                                                   (Y - Y_on_Z_fit$fitted.values))
+
+    print(b)
   }
-  # compute the p-value by comparing test statistic to normal distribution
+
+  # plot(density(prod_resid_resamp))
+  # plot(ecdf(prod_resid_resamp))
+
+  # compute the p-value by comparing test statistic to resampling distribution
   p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))
+
   # return test statistic and p-value
   return(list(test_stat = test_stat, p_value = p_value))
 }
@@ -146,5 +155,98 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
   X_on_Z_fit <- stats::glm(X ~ Z, family = X_on_Z_fam)
   Y_on_Z_fit <- stats::glm(Y ~ Z, family = Y_on_Z_fam)
 
+  W <- Y - Y_on_Z_fit$fitted.values
+  P <- X_on_Z_fit$fitted.values
 
+  # compute the products of residuals for each observation
+  # prod_resids <- (X - X_on_Z_fit$fitted.values) * W
+  prod_resids <- X * W
+  # compute the test statistic
+  test_stat <- 1/sqrt(n) * sum(prod_resids)
+
+  ########## Binomial GLM Family
+
+  if(X_on_Z_fam == 'binomial'){
+
+    # weighted CGF of S_n
+    wcgf <- function(s, P, W){
+      n <- length(P)
+      return(sum(log(exp(s*W)*P + 1 - P)))
+      # return(sum(log(exp(s*W/sqrt(n))*P + 1 - P)) / sqrt(n))
+    }
+
+    # weighted derivative of CGF
+    d1.wcgf <- function(s, P, W){
+      n <- length(P)
+      Q <- 1 - P
+      return(sum((W*P*exp(s*W)) / (exp(s*W)*P + 1 - P)))
+      # return(sum(W - (W*Q)/(exp(s*W/sqrt(n))*P + Q)) / sqrt(n))
+    }
+
+    # weighted Hessian of CGF
+    d2.wcgf <- function(s, P, W){
+      n <- length(P)
+      Q <- 1 - P
+      return(sum((W^2*P*Q*exp(s*W)) / (exp(s*W)*P + Q)^2))
+      # return(sum((W^2*P*Q*exp(s*W/sqrt(n))) / (exp(s*W/sqrt(n))*P + Q)^2) / n)
+    }
+
+    ##### SPA to CDF of A_n = S_n / n
+
+    # sp.cdf <- function(t, P, W){
+    #   n <- length(P)
+    #
+    #   s.hat <- uniroot(function(s){d1.wcgf(s, P = P, W = W) - n*t},
+    #                    lower = -20, upper = 20)$root
+    #
+    #   r.hat <- sign(s.hat) * sqrt(2 * (n*s.hat*t - wcgf(s = s.hat, P = P, W = W)))
+    #
+    #   F.hat <- pnorm(r.hat) + dnorm(r.hat) *
+    #     (1/r.hat - 1/(s.hat*sqrt(d2.wcgf(s = s.hat, P = P, W = W))))
+    #
+    #   return(F.hat)
+    # }
+    #
+    # p_value <- 1 - sp.cdf(test_stat/sqrt(n), P = P, W = W)
+
+    ##### SPA to CDF of T_n = S_n / sqrt(n)
+
+    sp.cdf <- function(t, P = P, W = W){
+      n <- length(P)
+
+      s.hat <- uniroot(function(s){d1.wcgf(s, P = P, W = W) - sqrt(n)*t},
+                       lower = -20, upper = 20)$root
+
+      r.hat <- sign(s.hat) * sqrt(2 * (n*s.hat*t/sqrt(n) -
+                                          wcgf(s = s.hat, P = P, W = W)))
+
+      F.hat <- pnorm(r.hat) + dnorm(r.hat) *
+        (1/r.hat - 1/(s.hat*sqrt(d2.wcgf(s = s.hat, P = P, W = W))))
+
+      return(F.hat)
+    }
+
+    # compute the p-value by comparing test statistic saddlepoint approximation
+    p_value <- 1 - sp.cdf(test_stat, P = P, W = W)
+
+    # return test statistic, p-value, and approximated CDF
+    return(list(test_stat = test_stat, p_value = p_value, cdf = sp.cdf))
+  }
+
+
+  ########## Poisson GLM Family
+
+  if(X_on_Z_fam == 'poisson'){
+
+    ### To be written
+
+  }
 }
+
+
+
+
+
+
+
+
