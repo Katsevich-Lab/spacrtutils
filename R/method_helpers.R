@@ -1,8 +1,8 @@
 
 # method helpers will go here (e.g. solving saddlepoint equations)
 
-#' \code{dCRT_dist} is a function computing the cumulant generating function (CGF) of
-#' distributions, multiplied by a weight function, from the GLM family
+#' \code{dCRT_dist} is a function that returns simulated data from an appropriate
+#' distribution depending on a specified  GLM family
 #'
 #' @param n The point where the CGF will be computed.
 #' @param fam The GLM family which includes the distribution whose CGF is being
@@ -12,7 +12,7 @@
 #' @return Simulated data from an appropriate distribution.
 #'
 #' @examples
-#' dCRT_dist(n = n, fitted.val = X_on_Z_fit$fitted.values, fam = 'poisson')
+#' dCRT_dist(n = 5, fitted.val = c(1,2,1,1,1), fam = 'poisson')
 #'
 #' @export
 dCRT_dist <- function(n, fitted.val, fam){
