@@ -24,6 +24,6 @@ Simulated data from an appropriate distribution.
 distributions, multiplied by a weight function, from the GLM family
 }
 \examples{
-dCRT_dist(n = n, fitted.val = X_on_Z_fit$fitted.values, fam = 'poisson')
+dCRT_dist(n = 5, fitted.val = c(1,2,1,1,1), fam = 'poisson')
 
 }

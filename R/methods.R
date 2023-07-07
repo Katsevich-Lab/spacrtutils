@@ -93,7 +93,7 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resa
 
   for(b in 1:B){
     # resampling X from X|Z
-    resamp_X <- dCRT.dist(n = n, fitted.val = X_on_Z_fit$fitted.values, fam = X_on_Z_fam)
+    resamp_X <- dCRT_dist(n = n, fitted.val = X_on_Z_fit$fitted.values, fam = X_on_Z_fam)
 
     # compute the products of residuals for each resampled observation
     prod_resid_resamp[b] <- 1/sqrt(n) * sum((resamp_X - X_on_Z_fit$fitted.values)*
