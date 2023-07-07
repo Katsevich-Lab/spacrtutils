@@ -1,3 +1,34 @@
+
+# method helpers will go here (e.g. solving saddlepoint equations)
+
+#' \code{dCRT.dist} is a function computing the cumulant generating function (CGF) of
+#' distributions, multiplied by a weight function, from the GLM family
+#'
+#' @param n The point where the CGF will be computed.
+#' @param fam The GLM family which includes the distribution whose CGF is being
+#' evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' @param fitted.values A vector containing the fitted parameter values by
+#' fitting a GLM to X on Z.
+#' @return Simulated data from an appropriate distribution.
+#'
+#' @examples
+#' dCRT.dist(n = n, fitted.val = X_on_Z_fit$fitted.values, fam = 'poisson')
+#'
+#' @export
+dCRT.dist <- function(n, fitted.val, fam){
+
+  if(fam == 'binomial') return(stats::rbinom(n = n, size = 1, prob = fitted.val))
+  if(fam == 'gaussian') return()
+  if(fam == 'Gamma') return()
+  if(fam == 'inverse.gaussian') return()
+  if(fam == 'poisson') return(stats::rpois(n = n, lambda = fitted.val))
+  if(fam == 'quasi') return()
+  if(fam == 'quasibinomial') return()
+  if(fam == 'quasipoisson') return()
+}
+
+
+
 # method helpers will go here (e.g. solving saddlepoint equations)
 
 #' \code{wcgf} is a function computing the cumulant generating function (CGF) of
