@@ -100,9 +100,6 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resa
                                                   (Y - Y_on_Z_fit$fitted.values))
   }
 
-  # plot(density(prod_resid_resamp))
-  # plot(ecdf(prod_resid_resamp))
-
   # compute the p-value by comparing test statistic to resampling distribution
   p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))
 
@@ -163,35 +160,18 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
   # compute the test statistic
   test_stat <- 1/sqrt(n) * sum(prod_resids)
 
-  ##### SPA to CDF of A_n = S_n / n
-  # sp.cdf <- function(t, P, W){
-  #   n <- length(P)
-  #
-  #   s.hat <- uniroot(function(s){d1.wcgf(s, P = P, W = W) - n*t},
-  #                    lower = -20, upper = 20)$root
-  #
-  #   r.hat <- sign(s.hat) * sqrt(2 * (n*s.hat*t - wcgf(s = s.hat, P = P, W = W)))
-  #
-  #   F.hat <- pnorm(r.hat) + dnorm(r.hat) *
-  #     (1/r.hat - 1/(s.hat*sqrt(d2.wcgf(s = s.hat, P = P, W = W))))
-  #
-  #   return(F.hat)
-  # }
-  #
-  # p_value <- 1 - sp.cdf(test_stat/sqrt(n), P = P, W = W)
-
   ##### SPA to CDF of T_n = S_n / sqrt(n)
   spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam){
     n <- length(P)
 
-    s.hat <- stats::uniroot(function(s){spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-                     lower = -20, upper = 20)$root
+    s.hat <- stats::uniroot(function(s){d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+                            lower = -20, upper = 20)$root
 
     r.hat <- sign(s.hat) * sqrt(2 * (n*s.hat*t/sqrt(n) -
-                                       spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
+                                       wcgf(s = s.hat, P = P, W = W, fam)))
 
     F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
-                (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
+                (1/r.hat - 1/(s.hat*sqrt(d2.wcgf(s = s.hat, P = P, W = W, fam))))
 
     return(F.hat)
   }
