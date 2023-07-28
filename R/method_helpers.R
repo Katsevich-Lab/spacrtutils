@@ -105,7 +105,7 @@ d2.wcgf <- function(s, P, W, fam){
   if(fam == 'binomial'){
     Q <- 1 - P
     # return(sum((W^2*P*Q*exp(s*W)) / (exp(s*W)*P + Q)^2))
-    return(sum((W^2*P*Q) / (exp(s*W)*P + 2 * P * Q + Q^2 * exp(-s*W))))
+    return(sum((W^2*P*Q) / (exp(s*W)*P^2 + 2 * P * Q + Q^2 * exp(-s*W))))
   }
 
   if(fam == 'gaussian'){
