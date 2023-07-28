@@ -73,7 +73,8 @@ wcgf <- function(s, P, W, fam){
 #' @export
 d1.wcgf <- function(s, P, W, fam){
 
-  if(fam == 'binomial') return(sum((W*P*exp(s*W)) / (exp(s*W)*P + 1 - P)))
+  # if(fam == 'binomial') return(sum((W*P*exp(s*W)) / (exp(s*W)*P + 1 - P)))
+  if(fam == 'binomial') return(sum((W*P) / (P + (1 - P) * exp(-s*W))))
   if(fam == 'gaussian') return()
   if(fam == 'Gamma') return()
   if(fam == 'inverse.gaussian') return()
@@ -103,7 +104,8 @@ d2.wcgf <- function(s, P, W, fam){
 
   if(fam == 'binomial'){
     Q <- 1 - P
-    return(sum((W^2*P*Q*exp(s*W)) / (exp(s*W)*P + Q)^2))
+    # return(sum((W^2*P*Q*exp(s*W)) / (exp(s*W)*P + Q)^2))
+    return(sum((W^2*P*Q) / (exp(s*W)*P + 2 * P * Q + Q^2 * exp(-s*W))))
   }
 
   if(fam == 'gaussian'){
