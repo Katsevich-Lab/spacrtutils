@@ -2,8 +2,8 @@
 % Please edit documentation in R/method_helpers.R
 \name{dCRT_dist}
 \alias{dCRT_dist}
-\title{\code{dCRT_dist} is a function computing the cumulant generating function (CGF) of
-distributions, multiplied by a weight function, from the GLM family}
+\title{\code{dCRT_dist} is a function that returns simulated data from an appropriate
+distribution depending on a specified  GLM family}
 \usage{
 dCRT_dist(n, fitted.val, fam)
 }
@@ -20,8 +20,8 @@ evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 Simulated data from an appropriate distribution.
 }
 \description{
-\code{dCRT_dist} is a function computing the cumulant generating function (CGF) of
-distributions, multiplied by a weight function, from the GLM family
+\code{dCRT_dist} is a function that returns simulated data from an appropriate
+distribution depending on a specified  GLM family
 }
 \examples{
 dCRT_dist(n = 5, fitted.val = c(1,2,1,1,1), fam = 'poisson')
