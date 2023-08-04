@@ -167,7 +167,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
     # s.hat <- stats::uniroot(function(s){spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
     #                         lower = -100, upper = 100)$root
 
-    R <- 20
+    R <- 10
 
     if(tryCatch(s.hat <- stats::uniroot(function(s){
       spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
@@ -189,10 +189,16 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
             lower = -8*R, upper = 8*R)$root,
             error = function(e) FALSE) == FALSE){
 
-            temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
-            return(list(test_stat = temp.gcm$test_stat,
-                        p_value = temp.gcm$p_value,
-                        cdf = NULL))
+            if(tryCatch(s.hat <- stats::uniroot(function(s){
+              spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+              lower = -16*R, upper = 16*R)$root,
+              error = function(e) FALSE) == FALSE){
+
+              temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
+              return(list(test_stat = temp.gcm$test_stat,
+                          p_value = temp.gcm$p_value,
+                          cdf = NULL))
+            }
           }
         }
       }
@@ -208,7 +214,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
   }
 
   # compute the p-value by comparing test statistic saddlepoint approximation
-  p_value <- 1 - suppressWarnings(spa.cdf(test_stat - 1/sqrt(n) * sum(P*W),
+  p_value <- 1 - suppressWarnings(spa.cdf(test_stat + 1/sqrt(n) * sum(P*W),
                                           P = P, W = W, fam = X_on_Z_fam))
 
   # return test statistic, p-value, and approximated CDF
