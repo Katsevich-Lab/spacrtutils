@@ -168,6 +168,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
     #                         lower = -100, upper = 100)$root
 
     R <- 10
+    temp.gcm <- "NO"
 
     if(tryCatch(s.hat <- stats::uniroot(function(s){
       spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
@@ -194,32 +195,179 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
               lower = -16*R, upper = 16*R)$root,
               error = function(e) FALSE) == FALSE){
 
-              temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
-              return(list(test_stat = temp.gcm$test_stat,
-                          p_value = temp.gcm$p_value,
-                          cdf = NULL))
+              if(tryCatch(s.hat <- stats::uniroot(function(s){
+                spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+                lower = -32*R, upper = 32*R)$root,
+                error = function(e) FALSE) == FALSE){
+
+                if(tryCatch(s.hat <- stats::uniroot(function(s){
+                  spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+                  lower = -64*R, upper = 64*R)$root,
+                  error = function(e) FALSE) == FALSE){
+
+                  if(tryCatch(s.hat <- stats::uniroot(function(s){
+                    spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+                    lower = -128*R, upper = 128*R)$root,
+                    error = function(e) FALSE) == FALSE){
+
+                    temp.gcm <- "YES"
+                    # return(list(test_stat = temp.gcm$test_stat,
+                    #             p_value = temp.gcm$p_value,
+                    #             cdf = NULL))
+                  }
+                }
+              }
             }
           }
         }
       }
     }
 
-    r.hat <- sign(s.hat) * sqrt(2 * (n*s.hat*t/sqrt(n) -
-                                       spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
+    if(temp.gcm == "NO"){
+      r.hat <- sign(s.hat) * sqrt(2 * (n*s.hat*t/sqrt(n) -
+                                         spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
 
-    F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
-      (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
+      F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
+        (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
 
-    return(F.hat)
+      return(F.hat)
+    }else{
+      return(NaN)
+    }
   }
 
-  # compute the p-value by comparing test statistic saddlepoint approximation
-  p_value <- 1 - suppressWarnings(spa.cdf(test_stat + 1/sqrt(n) * sum(P*W),
+  p_value_opp <- suppressWarnings(spa.cdf(test_stat + 1/sqrt(n) * sum(P*W),
                                           P = P, W = W, fam = X_on_Z_fam))
 
-  # return test statistic, p-value, and approximated CDF
-  return(list(test_stat = test_stat, p_value = p_value, cdf = spa.cdf))
+  # print(p_value_opp)
+
+  if(is.nan(p_value_opp) == TRUE){
+    temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
+    # return test statistic, GCM p-value, and null CDF
+    return(list(test_stat = temp.gcm$test_stat,
+                p_value = temp.gcm$p_value,
+                cdf = NULL))
+  }else{
+    p_value <- 1 - p_value_opp
+    # print(p_value)
+
+    if(p_value < 0 | p_value > 1){
+      temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
+      # return test statistic, GCM p-value, and null CDF
+      return(list(test_stat = temp.gcm$test_stat,
+                  p_value = temp.gcm$p_value,
+                  cdf = NULL))
+    }else{
+      return(list(test_stat = test_stat, p_value = p_value, cdf = spa.cdf))
+    }
+  }
 }
+
+
+
+# spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
+#
+#   X <- data$X; Y <- data$Y; Z <- data$Z
+#   n <- length(X)
+#
+#   X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
+#   Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+#
+#   W <- Y - Y_on_Z_fit$fitted.values
+#   P <- X_on_Z_fit$fitted.values
+#
+#   # compute the products of residuals for each observation
+#   prod_resids <- (X - X_on_Z_fit$fitted.values) * W
+#   # prod_resids <- X * W
+#   # compute the test statistic
+#   test_stat <- 1/sqrt(n) * sum(prod_resids)
+#
+#   ##### SPA to CDF of T_n = S_n / sqrt(n)
+#   spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam){
+#     n <- length(P)
+#
+#     # s.hat <- stats::uniroot(function(s){spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+#     #                         lower = -100, upper = 100)$root
+#
+#     R <- 10
+#
+#     if(tryCatch(s.hat <- stats::uniroot(function(s){
+#       spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+#       lower = -R, upper = R)$root,
+#       error = function(e) FALSE) == FALSE){
+#
+#       if(tryCatch(s.hat <- stats::uniroot(function(s){
+#         spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+#         lower = -2*R, upper = 2*R)$root,
+#         error = function(e) FALSE) == FALSE){
+#
+#         if(tryCatch(s.hat <- stats::uniroot(function(s){
+#           spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+#           lower = -4*R, upper = 4*R)$root,
+#           error = function(e) FALSE) == FALSE){
+#
+#           if(tryCatch(s.hat <- stats::uniroot(function(s){
+#             spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+#             lower = -8*R, upper = 8*R)$root,
+#             error = function(e) FALSE) == FALSE){
+#
+#             if(tryCatch(s.hat <- stats::uniroot(function(s){
+#               spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+#               lower = -16*R, upper = 16*R)$root,
+#               error = function(e) FALSE) == FALSE){
+#
+#               if(tryCatch(s.hat <- stats::uniroot(function(s){
+#                 spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+#                 lower = -32*R, upper = 32*R)$root,
+#                 error = function(e) FALSE) == FALSE){
+#
+#                 if(tryCatch(s.hat <- stats::uniroot(function(s){
+#                   spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+#                   lower = -64*R, upper = 64*R)$root,
+#                   error = function(e) FALSE) == FALSE){
+#
+#                   if(tryCatch(s.hat <- stats::uniroot(function(s){
+#                     spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
+#                     lower = -128*R, upper = 128*R)$root,
+#                     error = function(e) FALSE) == FALSE){
+#
+#                     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
+#                     return(list(test_stat = temp.gcm$test_stat,
+#                                 p_value = temp.gcm$p_value,
+#                                 cdf = NULL))
+#                   }
+#                 }
+#               }
+#             }
+#           }
+#         }
+#       }
+#     }
+#
+#     r.hat <- sign(s.hat) * sqrt(2 * (n*s.hat*t/sqrt(n) -
+#                                        spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
+#
+#     F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
+#       (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
+#
+#     return(F.hat)
+#   }
+#
+#   # compute the p-value by comparing test statistic saddlepoint approximation
+#   p_value <- 1 - suppressWarnings(spa.cdf(test_stat + 1/sqrt(n) * sum(P*W),
+#                                           P = P, W = W, fam = X_on_Z_fam))
+#
+#   if(p_value < 0 | p_value > 1 | is.na(p_value) == TRUE){
+#     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
+#     # return test statistic, GCM p-value, and null CDF
+#     return(list(test_stat = temp.gcm$test_stat,
+#                 p_value = temp.gcm$p_value,
+#                 cdf = NULL))
+#   }else{
+#     # return test statistic, p-value, and approximated CDF
+#     return(list(test_stat = test_stat, p_value = p_value, cdf = spa.cdf))
+#   }
+# }
 
 
 
