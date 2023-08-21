@@ -7,9 +7,13 @@
 #' variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
 #' (an nxp matrix of covariates).
 #' @param X_on_Z_fam The GLM family for the regression of X on Z
-#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, \code{negative.binomial}, etc).
 #' @param Y_on_Z_fam The GLM family for the regression of Y on Z
-#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, \code{negative.binomial}, etc).
+#' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
+#' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
+#' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
+#' (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #'
 #' @return A named list with fields \code{test_stat} and \code{p_value}.
 #'
@@ -24,12 +28,27 @@
 #' results$test_stat
 #' results$p_value
 #' @export
-GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
+GCM <- function(data, X_on_Z_fam, Y_on_Z_fam, aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
+
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
+
   # fit X on Z and Y on Z regressions
-  X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
-  Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+  if(X_on_Z_fam == "negative.binomial"){
+    X_on_Z_fit <- suppressWarnings(glm(X ~ Z,
+                                       family = negative.binomial(aux_info_X_on_Z$theta_hat),
+                                       mustart = aux_info_X_on_Z$fitted_values))
+  }else{
+    X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
+  }
+  if(Y_on_Z_fam == "negative.binomial"){
+    Y_on_Z_fit <- suppressWarnings(glm(Y ~ Z,
+                                       family = negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                       mustart = aux_info_Y_on_Z$fitted_values))
+  }else{
+    Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+  }
+
   # compute the products of residuals for each observation
   prod_resids <- (X-X_on_Z_fit$fitted.values)*(Y-Y_on_Z_fit$fitted.values)
   # compute the test statistic
@@ -59,6 +78,10 @@ GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
 #' normalized.
 #' @param return_resamples A logical variable indicating whether to return the
 #' resampled test statistics.
+#' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
+#' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
+#' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
+#' (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #'
 #' @return A named list with fields \code{test_stat}, \code{p_value}, and
 #' \code{resamples}. Here, \code{resamples} is a vector of length \code{B}. It
@@ -75,14 +98,27 @@ GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
 #' results$test_stat
 #' results$p_value
 #' @export
-dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resamples = FALSE) {
+dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resamples = FALSE, aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
 
   # fit X on Z and Y on Z regressions
-  X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
-  Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+  if(X_on_Z_fam == "negative.binomial"){
+    X_on_Z_fit <- suppressWarnings(glm(X ~ Z,
+                                       family = negative.binomial(aux_info_X_on_Z$theta_hat),
+                                       mustart = aux_info_X_on_Z$fitted_values))
+  }else{
+    X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
+  }
+  if(Y_on_Z_fam == "negative.binomial"){
+    Y_on_Z_fit <- suppressWarnings(glm(Y ~ Z,
+                                       family = negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                       mustart = aux_info_Y_on_Z$fitted_values))
+  }else{
+    Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+  }
+
 
   # compute the products of residuals for each observation
   prod_resids <- (X - X_on_Z_fit$fitted.values)*(Y - Y_on_Z_fit$fitted.values)
@@ -97,7 +133,7 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resa
 
     # compute the products of residuals for each resampled observation
     prod_resid_resamp[b] <- 1/sqrt(n) * sum((resamp_X - X_on_Z_fit$fitted.values)*
-                                                  (Y - Y_on_Z_fit$fitted.values))
+                                              (Y - Y_on_Z_fit$fitted.values))
   }
 
   # compute the p-value by comparing test statistic to resampling distribution
@@ -124,6 +160,10 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resa
 #' @param normalize A logical variable indicating whether the spaCRT is based on
 #' the normalized test statistic.
 #' @param return_cdf A logical variable indicating whether to return the CDF
+#' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
+#' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
+#' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
+#' (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #'
 #' @examples
 #' n <- 20; p <- 2; normalize <- FALSE; return_cdf <- FALSE
@@ -143,13 +183,26 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, B, normalize = FALSE, return_resa
 #' return_cdf == TRUE.
 #'
 #' @export
-spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
+spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf, aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
 
-  X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
-  Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+  # fit X on Z and Y on Z regressions
+  if(X_on_Z_fam == "negative.binomial"){
+    X_on_Z_fit <- suppressWarnings(glm(X ~ Z,
+                                       family = negative.binomial(aux_info_X_on_Z$theta_hat),
+                                       mustart = aux_info_X_on_Z$fitted_values))
+  }else{
+    X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
+  }
+  if(Y_on_Z_fam == "negative.binomial"){
+    Y_on_Z_fit <- suppressWarnings(glm(Y ~ Z,
+                                       family = negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                       mustart = aux_info_Y_on_Z$fitted_values))
+  }else{
+    Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+  }
 
   W <- Y - Y_on_Z_fit$fitted.values
   P <- X_on_Z_fit$fitted.values

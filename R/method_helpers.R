@@ -155,11 +155,11 @@ nb_precomp <- function(data){
   Y <- data$Y
   Z <- data$Z
   pois_fit <- stats::glm.fit(y = Y, x = Z, family = stats::poisson())
-  theta_hat <- sceptre::estimate_theta(
+  theta_hat <- sceptre:::estimate_theta(
     y = Y,
-    mu = pois_fit$fitted.values, 
+    mu = pois_fit$fitted.values,
     dfr = pois_fit$df.residual,
-    limit = 50, 
+    limit = 50,
     eps = (.Machine$double.eps)^(1/4)
   )[[1]]
   list(fitted_values = pois_fit$fitted.values, theta_hat = theta_hat)

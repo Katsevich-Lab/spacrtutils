@@ -4,7 +4,15 @@
 \alias{spaCRT}
 \title{The saddlepoint approximation to the dCRT.}
 \usage{
-spaCRT(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf)
+spaCRT(
+  data,
+  X_on_Z_fam,
+  Y_on_Z_fam,
+  normalize,
+  return_cdf,
+  aux_info_X_on_Z = NULL,
+  aux_info_Y_on_Z = NULL
+)
 }
 \arguments{
 \item{data}{A named list with fields \code{X} (an nx1 vector for the predictor
@@ -21,6 +29,12 @@ variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
 the normalized test statistic.}
 
 \item{return_cdf}{A logical variable indicating whether to return the CDF}
+
+\item{aux_info_X_on_Z}{The auxiliary information that may be used for complex GLM regression
+(For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
+
+\item{aux_info_Y_on_Z}{The auxiliary information that may be used for complex GLM regression
+(For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
 }
 \value{
 A named list with fields \code{test_stat}, \code{p_value}, and
