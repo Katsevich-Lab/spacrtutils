@@ -34,24 +34,25 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, aux_info_X_on_Z = NU
   X <- data$X; Y <- data$Y; Z <- data$Z
 
   # fit X on Z and Y on Z regressions
-  if(X_on_Z_fam == "negative.binomial"){
-    X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
-                                              family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
-                                              mustart = aux_info_X_on_Z$fitted_values))
+  if(is.null(X_on_Z_fam)){
+    X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
-    if(is.null(X_on_Z_fam)){
-      X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
+    if(X_on_Z_fam == "negative.binomial"){
+      X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
+                                                family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
+                                                mustart = aux_info_X_on_Z$fitted_values))
     }else{
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
     }
   }
-  if(Y_on_Z_fam == "negative.binomial"){
-    Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                              family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                              mustart = aux_info_Y_on_Z$fitted_values))
+
+  if(is.null(Y_on_Z_fam)){
+    Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
-    if(is.null(Y_on_Z_fam)){
-      Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
+    if(Y_on_Z_fam == "negative.binomial"){
+      Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                                family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                                mustart = aux_info_Y_on_Z$fitted_values))
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
     }
@@ -112,28 +113,30 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B, normalize = FALS
   n <- length(X)
 
   # fit X on Z and Y on Z regressions
-  if(X_on_Z_fam == "negative.binomial"){
-    X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
-                                              family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
-                                              mustart = aux_info_X_on_Z$fitted_values))
+  if(is.null(X_on_Z_fam)){
+    X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
-    if(is.null(X_on_Z_fam)){
-      X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
+    if(X_on_Z_fam == "negative.binomial"){
+      X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
+                                                family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
+                                                mustart = aux_info_X_on_Z$fitted_values))
     }else{
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
     }
   }
-  if(Y_on_Z_fam == "negative.binomial"){
-    Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                              family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                              mustart = aux_info_Y_on_Z$fitted_values))
+
+  if(is.null(Y_on_Z_fam)){
+    Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
-    if(is.null(Y_on_Z_fam)){
-      Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
+    if(Y_on_Z_fam == "negative.binomial"){
+      Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                                family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                                mustart = aux_info_Y_on_Z$fitted_values))
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
     }
   }
+
 
 
   # compute the products of residuals for each observation
@@ -205,28 +208,30 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, normalize = FALSE
   n <- length(X)
 
   # fit X on Z and Y on Z regressions
-  if(X_on_Z_fam == "negative.binomial"){
-    X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
-                                              family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
-                                              mustart = aux_info_X_on_Z$fitted_values))
+  if(is.null(X_on_Z_fam)){
+    X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
-    if(is.null(X_on_Z_fam)){
-      X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
+    if(X_on_Z_fam == "negative.binomial"){
+      X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
+                                                family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
+                                                mustart = aux_info_X_on_Z$fitted_values))
     }else{
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
     }
   }
-  if(Y_on_Z_fam == "negative.binomial"){
-    Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                              family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                              mustart = aux_info_Y_on_Z$fitted_values))
+
+  if(is.null(Y_on_Z_fam)){
+    Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
-    if(is.null(Y_on_Z_fam)){
-      Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
+    if(Y_on_Z_fam == "negative.binomial"){
+      Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                                family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                                mustart = aux_info_Y_on_Z$fitted_values))
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
     }
   }
+
 
   W <- Y - Y_on_Z_fit$fitted.values
   P <- X_on_Z_fit$fitted.values
