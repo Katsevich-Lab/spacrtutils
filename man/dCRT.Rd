@@ -6,8 +6,8 @@
 \usage{
 dCRT(
   data,
-  X_on_Z_fam,
-  Y_on_Z_fam,
+  X_on_Z_fam = NULL,
+  Y_on_Z_fam = NULL,
   B,
   normalize = FALSE,
   return_resamples = FALSE,

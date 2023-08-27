@@ -6,8 +6,8 @@
 \usage{
 GCM(
   data,
-  X_on_Z_fam,
-  Y_on_Z_fam,
+  X_on_Z_fam = NULL,
+  Y_on_Z_fam = NULL,
   aux_info_X_on_Z = NULL,
   aux_info_Y_on_Z = NULL
 )

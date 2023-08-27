@@ -6,9 +6,9 @@
 \usage{
 spaCRT(
   data,
-  X_on_Z_fam,
-  Y_on_Z_fam,
-  normalize,
+  X_on_Z_fam = NULL,
+  Y_on_Z_fam = NULL,
+  normalize = FALSE,
   return_cdf,
   aux_info_X_on_Z = NULL,
   aux_info_Y_on_Z = NULL
