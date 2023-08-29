@@ -28,7 +28,8 @@
 #' results$test_stat
 #' results$p_value
 #' @export
-GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
+GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
+                aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
@@ -39,8 +40,8 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, aux_info_X_on_Z = NU
   }else{
     if(X_on_Z_fam == "negative.binomial"){
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
-                                                family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
-                                                mustart = aux_info_X_on_Z$fitted_values))
+                          family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
+                          mustart = aux_info_X_on_Z$fitted_values))
     }else{
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
     }
@@ -51,8 +52,8 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, aux_info_X_on_Z = NU
   }else{
     if(Y_on_Z_fam == "negative.binomial"){
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                                family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                                mustart = aux_info_Y_on_Z$fitted_values))
+                          family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                          mustart = aux_info_Y_on_Z$fitted_values))
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
     }
@@ -107,7 +108,9 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, aux_info_X_on_Z = NU
 #' results$test_stat
 #' results$p_value
 #' @export
-dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B, normalize = FALSE, return_resamples = FALSE, aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
+dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
+                 normalize = FALSE, return_resamples = FALSE,
+                 aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
@@ -118,8 +121,8 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B, normalize = FALS
   }else{
     if(X_on_Z_fam == "negative.binomial"){
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
-                                                family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
-                                                mustart = aux_info_X_on_Z$fitted_values))
+                            family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
+                            mustart = aux_info_X_on_Z$fitted_values))
     }else{
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
     }
@@ -130,8 +133,8 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B, normalize = FALS
   }else{
     if(Y_on_Z_fam == "negative.binomial"){
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                                family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                                mustart = aux_info_Y_on_Z$fitted_values))
+                            family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                            mustart = aux_info_Y_on_Z$fitted_values))
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
     }
@@ -202,7 +205,9 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B, normalize = FALS
 #' return_cdf == TRUE.
 #'
 #' @export
-spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, normalize = FALSE, return_cdf, aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
+spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
+                   normalize = FALSE, return_cdf,
+                   aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
@@ -213,8 +218,8 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, normalize = FALSE
   }else{
     if(X_on_Z_fam == "negative.binomial"){
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
-                                                family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
-                                                mustart = aux_info_X_on_Z$fitted_values))
+                              family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
+                              mustart = aux_info_X_on_Z$fitted_values))
     }else{
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
     }
@@ -225,8 +230,8 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, normalize = FALSE
   }else{
     if(Y_on_Z_fam == "negative.binomial"){
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                                family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                                mustart = aux_info_Y_on_Z$fitted_values))
+                              family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                              mustart = aux_info_Y_on_Z$fitted_values))
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
     }
@@ -292,10 +297,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, normalize = FALSE
                     lower = -128*R, upper = 128*R)$root,
                     error = function(e) FALSE) == FALSE){
 
-                    temp.gcm <- "YES"
-                    # return(list(test_stat = temp.gcm$test_stat,
-                    #             p_value = temp.gcm$p_value,
-                    #             cdf = NULL))
+                      temp.gcm <- "YES"
                   }
                 }
               }
@@ -321,10 +323,9 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, normalize = FALSE
   p_value_opp <- suppressWarnings(spa.cdf(test_stat + 1/sqrt(n) * sum(P*W),
                                           P = P, W = W, fam = X_on_Z_fam))
 
-  # print(p_value_opp)
-
   if(is.nan(p_value_opp) == TRUE){
     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam, aux_info_X_on_Z, aux_info_Y_on_Z)
+
     # return test statistic, GCM p-value, and null CDF
     return(list(test_stat = temp.gcm$test_stat,
                 p_value = temp.gcm$p_value,
@@ -335,6 +336,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, normalize = FALSE
 
     if(p_value < 0 | p_value > 1){
       temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam, aux_info_X_on_Z, aux_info_Y_on_Z)
+
       # return test statistic, GCM p-value, and null CDF
       return(list(test_stat = temp.gcm$test_stat,
                   p_value = temp.gcm$p_value,
@@ -344,112 +346,6 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, normalize = FALSE
     }
   }
 }
-
-
-
-# spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam, normalize, return_cdf) {
-#
-#   X <- data$X; Y <- data$Y; Z <- data$Z
-#   n <- length(X)
-#
-#   X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
-#   Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
-#
-#   W <- Y - Y_on_Z_fit$fitted.values
-#   P <- X_on_Z_fit$fitted.values
-#
-#   # compute the products of residuals for each observation
-#   prod_resids <- (X - X_on_Z_fit$fitted.values) * W
-#   # prod_resids <- X * W
-#   # compute the test statistic
-#   test_stat <- 1/sqrt(n) * sum(prod_resids)
-#
-#   ##### SPA to CDF of T_n = S_n / sqrt(n)
-#   spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam){
-#     n <- length(P)
-#
-#     # s.hat <- stats::uniroot(function(s){spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-#     #                         lower = -100, upper = 100)$root
-#
-#     R <- 10
-#
-#     if(tryCatch(s.hat <- stats::uniroot(function(s){
-#       spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-#       lower = -R, upper = R)$root,
-#       error = function(e) FALSE) == FALSE){
-#
-#       if(tryCatch(s.hat <- stats::uniroot(function(s){
-#         spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-#         lower = -2*R, upper = 2*R)$root,
-#         error = function(e) FALSE) == FALSE){
-#
-#         if(tryCatch(s.hat <- stats::uniroot(function(s){
-#           spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-#           lower = -4*R, upper = 4*R)$root,
-#           error = function(e) FALSE) == FALSE){
-#
-#           if(tryCatch(s.hat <- stats::uniroot(function(s){
-#             spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-#             lower = -8*R, upper = 8*R)$root,
-#             error = function(e) FALSE) == FALSE){
-#
-#             if(tryCatch(s.hat <- stats::uniroot(function(s){
-#               spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-#               lower = -16*R, upper = 16*R)$root,
-#               error = function(e) FALSE) == FALSE){
-#
-#               if(tryCatch(s.hat <- stats::uniroot(function(s){
-#                 spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-#                 lower = -32*R, upper = 32*R)$root,
-#                 error = function(e) FALSE) == FALSE){
-#
-#                 if(tryCatch(s.hat <- stats::uniroot(function(s){
-#                   spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-#                   lower = -64*R, upper = 64*R)$root,
-#                   error = function(e) FALSE) == FALSE){
-#
-#                   if(tryCatch(s.hat <- stats::uniroot(function(s){
-#                     spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-#                     lower = -128*R, upper = 128*R)$root,
-#                     error = function(e) FALSE) == FALSE){
-#
-#                     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
-#                     return(list(test_stat = temp.gcm$test_stat,
-#                                 p_value = temp.gcm$p_value,
-#                                 cdf = NULL))
-#                   }
-#                 }
-#               }
-#             }
-#           }
-#         }
-#       }
-#     }
-#
-#     r.hat <- sign(s.hat) * sqrt(2 * (n*s.hat*t/sqrt(n) -
-#                                        spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
-#
-#     F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
-#       (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
-#
-#     return(F.hat)
-#   }
-#
-#   # compute the p-value by comparing test statistic saddlepoint approximation
-#   p_value <- 1 - suppressWarnings(spa.cdf(test_stat + 1/sqrt(n) * sum(P*W),
-#                                           P = P, W = W, fam = X_on_Z_fam))
-#
-#   if(p_value < 0 | p_value > 1 | is.na(p_value) == TRUE){
-#     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
-#     # return test statistic, GCM p-value, and null CDF
-#     return(list(test_stat = temp.gcm$test_stat,
-#                 p_value = temp.gcm$p_value,
-#                 cdf = NULL))
-#   }else{
-#     # return test statistic, p-value, and approximated CDF
-#     return(list(test_stat = test_stat, p_value = p_value, cdf = spa.cdf))
-#   }
-# }
 
 
 
