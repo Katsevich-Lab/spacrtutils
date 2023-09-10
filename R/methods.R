@@ -10,6 +10,10 @@
 #' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, \code{negative.binomial}, etc).
 #' @param Y_on_Z_fam The GLM family for the regression of Y on Z
 #' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, \code{negative.binomial}, etc).
+#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating E[X|Z].
+#' Default is TRUE. If set to FALSE, mean of X is used to estimate E[X|Z].
+#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating E[Y|Z].
+#' Default is TRUE. If set to FALSE, mean of Y is used to estimate E[Y|Z].
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -89,6 +93,10 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' normalized.
 #' @param return_resamples A logical variable indicating whether to return the
 #' resampled test statistics.
+#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating E[X|Z].
+#' Default is TRUE. If set to FALSE, mean of X is used to estimate E[X|Z].
+#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating E[Y|Z].
+#' Default is TRUE. If set to FALSE, mean of Y is used to estimate E[Y|Z].
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -190,6 +198,10 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
 #' @param normalize A logical variable indicating whether the spaCRT is based on
 #' the normalized test statistic.
 #' @param return_cdf A logical variable indicating whether to return the CDF
+#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating E[X|Z].
+#' Default is TRUE. If set to FALSE, mean of X is used to estimate E[X|Z].
+#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating E[Y|Z].
+#' Default is TRUE. If set to FALSE, mean of Y is used to estimate E[Y|Z].
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -212,7 +224,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
 #' saddlepoint approximation to the CDF of the resampling distribution of the
 #' test statistic evaluated at t. This function is returned only if
 #' return_cdf == TRUE.
-#' gcm.default returns TRUE if spacrt::GCM was employed due to failure of spaCRT.
+#' gcm.default returns TRUE if spacrt::GCM was employed due to the failure of spaCRT.
 #'
 #' @export
 spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
