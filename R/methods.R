@@ -29,13 +29,14 @@
 #' results$p_value
 #' @export
 GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
+                fit_glm_X = TRUE, fit_glm_Y = TRUE,
                 aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
 
   # fit X on Z and Y on Z regressions
-  if(is.null(X_on_Z_fam)){
+  if(!fit_glm_X){
     X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
     if(X_on_Z_fam == "negative.binomial"){
@@ -47,7 +48,7 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 
-  if(is.null(Y_on_Z_fam)){
+  if(!fit_glm_Y){
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
     if(Y_on_Z_fam == "negative.binomial"){
@@ -67,7 +68,7 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   # compute the p-value by comparing test statistic to normal distribution
   p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)
   # return test statistic and p-value
-  list(test_stat = test_stat, p_value = p_value)
+  return(list(test_stat = test_stat, p_value = p_value))
 }
 
 
@@ -110,13 +111,19 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' @export
 dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
                  normalize = FALSE, return_resamples = FALSE,
+                 fit_glm_X = TRUE, fit_glm_Y = TRUE,
                  aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
+
+  if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
+    stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
+  }
+
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
 
   # fit X on Z and Y on Z regressions
-  if(is.null(X_on_Z_fam)){
+  if(!fit_glm_X){
     X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
     if(X_on_Z_fam == "negative.binomial"){
@@ -128,7 +135,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
     }
   }
 
-  if(is.null(Y_on_Z_fam)){
+  if(!fit_glm_Y){
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
     if(Y_on_Z_fam == "negative.binomial"){
@@ -151,7 +158,8 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
 
   for(b in 1:B){
     # resampling X from X|Z
-    resamp_X <- dCRT_dist(n = n, fitted.val = X_on_Z_fit$fitted.values, fam = X_on_Z_fam)
+    resamp_X <- spacrt::dCRT_dist(n = n, fitted.val = X_on_Z_fit$fitted.values,
+                                  fam = X_on_Z_fam)
 
     # compute the products of residuals for each resampled observation
     prod_resid_resamp[b] <- 1/sqrt(n) * sum((resamp_X - X_on_Z_fit$fitted.values)*
@@ -198,22 +206,29 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
 #' results$test_stat
 #' results$p_value
 #'
-#' @return A named list with fields \code{test_stat}, \code{p_value}, and
-#' \code{cdf}. Here, cdf is a function that takes in a value t and returns the
+#' @return A named list with fields \code{test_stat}, \code{p_value}, \code{cdf}, and
+#' \code{gcm.default}.
+#' Here, cdf is a function that takes in a value t and returns the
 #' saddlepoint approximation to the CDF of the resampling distribution of the
 #' test statistic evaluated at t. This function is returned only if
 #' return_cdf == TRUE.
+#' gcm.default returns TRUE if spacrt::GCM was employed due to failure of spaCRT.
 #'
 #' @export
 spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
-                   normalize = FALSE, return_cdf,
+                   normalize = FALSE, return_cdf = FALSE,
+                   fit_glm_X = TRUE, fit_glm_Y = TRUE,
                    aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
+
+  if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
+    stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
+  }
 
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
 
   # fit X on Z and Y on Z regressions
-  if(is.null(X_on_Z_fam)){
+  if(!fit_glm_X){
     X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
     if(X_on_Z_fam == "negative.binomial"){
@@ -225,7 +240,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 
-  if(is.null(Y_on_Z_fam)){
+  if(!fit_glm_Y){
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
     if(Y_on_Z_fam == "negative.binomial"){
@@ -324,25 +339,30 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                                           P = P, W = W, fam = X_on_Z_fam))
 
   if(is.nan(p_value_opp) == TRUE){
-    temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam, aux_info_X_on_Z, aux_info_Y_on_Z)
+    temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
+                            aux_info_X_on_Z, aux_info_Y_on_Z)
 
     # return test statistic, GCM p-value, and null CDF
     return(list(test_stat = temp.gcm$test_stat,
                 p_value = temp.gcm$p_value,
-                cdf = NULL))
+                cdf = NULL,
+                gcm.default = TRUE))
   }else{
     p_value <- 1 - p_value_opp
     # print(p_value)
 
     if(p_value < 0 | p_value > 1){
-      temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam, aux_info_X_on_Z, aux_info_Y_on_Z)
+      temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
+                              aux_info_X_on_Z, aux_info_Y_on_Z)
 
       # return test statistic, GCM p-value, and null CDF
       return(list(test_stat = temp.gcm$test_stat,
                   p_value = temp.gcm$p_value,
-                  cdf = NULL))
+                  cdf = NULL,
+                  gcm.default = TRUE))
     }else{
-      return(list(test_stat = test_stat, p_value = p_value, cdf = spa.cdf))
+      return(list(test_stat = test_stat, p_value = p_value,
+                  cdf = spa.cdf, gcm.default = FALSE))
     }
   }
 }
