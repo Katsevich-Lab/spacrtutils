@@ -8,6 +8,8 @@ GCM(
   data,
   X_on_Z_fam = NULL,
   Y_on_Z_fam = NULL,
+  fit_glm_X = TRUE,
+  fit_glm_Y = TRUE,
   aux_info_X_on_Z = NULL,
   aux_info_Y_on_Z = NULL
 )
@@ -22,6 +24,12 @@ variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
 
 \item{Y_on_Z_fam}{The GLM family for the regression of Y on Z
 (values can be \code{gaussian}, \code{binomial}, \code{poisson}, \code{negative.binomial}, etc).}
+
+\item{fit_glm_X}{A logical variable indicating whether to use GLM for estimating E\link{X|Z}.
+Default is TRUE. If set to FALSE, mean of X is used to estimate E\link{X|Z}.}
+
+\item{fit_glm_Y}{A logical variable indicating whether to use GLM for estimating E\link{Y|Z}.
+Default is TRUE. If set to FALSE, mean of Y is used to estimate E\link{Y|Z}.}
 
 \item{aux_info_X_on_Z}{The auxiliary information that may be used for complex GLM regression
 (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}

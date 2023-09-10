@@ -9,7 +9,9 @@ spaCRT(
   X_on_Z_fam = NULL,
   Y_on_Z_fam = NULL,
   normalize = FALSE,
-  return_cdf,
+  return_cdf = FALSE,
+  fit_glm_X = TRUE,
+  fit_glm_Y = TRUE,
   aux_info_X_on_Z = NULL,
   aux_info_Y_on_Z = NULL
 )
@@ -30,6 +32,12 @@ the normalized test statistic.}
 
 \item{return_cdf}{A logical variable indicating whether to return the CDF}
 
+\item{fit_glm_X}{A logical variable indicating whether to use GLM for estimating E\link{X|Z}.
+Default is TRUE. If set to FALSE, mean of X is used to estimate E\link{X|Z}.}
+
+\item{fit_glm_Y}{A logical variable indicating whether to use GLM for estimating E\link{Y|Z}.
+Default is TRUE. If set to FALSE, mean of Y is used to estimate E\link{Y|Z}.}
+
 \item{aux_info_X_on_Z}{The auxiliary information that may be used for complex GLM regression
 (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
 
@@ -37,11 +45,13 @@ the normalized test statistic.}
 (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
 }
 \value{
-A named list with fields \code{test_stat}, \code{p_value}, and
-\code{cdf}. Here, cdf is a function that takes in a value t and returns the
+A named list with fields \code{test_stat}, \code{p_value}, \code{cdf}, and
+\code{gcm.default}.
+Here, cdf is a function that takes in a value t and returns the
 saddlepoint approximation to the CDF of the resampling distribution of the
 test statistic evaluated at t. This function is returned only if
 return_cdf == TRUE.
+gcm.default returns TRUE if spacrt::GCM was employed due to the failure of spaCRT.
 }
 \description{
 \code{spaCRT} is a function carrying out the saddlepoint approximation to the
