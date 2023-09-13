@@ -352,7 +352,8 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
   if(is.nan(p_value_opp) == TRUE){
     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
-                            aux_info_X_on_Z, aux_info_Y_on_Z)
+                            aux_info_X_on_Z = aux_info_X_on_Z, 
+                            aux_info_Y_on_Z = aux_info_Y_on_Z)
 
     # return test statistic, GCM p-value, and null CDF
     return(list(test_stat = temp.gcm$test_stat,
@@ -365,7 +366,8 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
     if(p_value < 0 | p_value > 1){
       temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
-                              aux_info_X_on_Z, aux_info_Y_on_Z)
+                              aux_info_X_on_Z = aux_info_X_on_Z, 
+                              aux_info_Y_on_Z = aux_info_Y_on_Z)
 
       # return test statistic, GCM p-value, and null CDF
       return(list(test_stat = temp.gcm$test_stat,
