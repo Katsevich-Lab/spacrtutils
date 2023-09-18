@@ -72,7 +72,8 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   # compute the p-value by comparing test statistic to normal distribution
   p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)
   # return test statistic and p-value
-  return(list(test_stat = test_stat, p_value = p_value))
+  return(list(test_stat = test_stat, p_value = p_value, 
+              unnormalized_test_stat = 1/sqrt(n)*sum(prod_resids)))
 }
 
 
@@ -286,42 +287,42 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
     if(tryCatch(s.hat <- stats::uniroot(function(s){
       spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-      lower = -R, upper = R)$root,
+      lower = -R, upper = R, tol = .Machine$double.eps)$root,
       error = function(e) FALSE) == FALSE){
 
       if(tryCatch(s.hat <- stats::uniroot(function(s){
         spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-        lower = -2*R, upper = 2*R)$root,
+        lower = -2*R, upper = 2*R, tol = .Machine$double.eps)$root,
         error = function(e) FALSE) == FALSE){
 
         if(tryCatch(s.hat <- stats::uniroot(function(s){
           spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-          lower = -4*R, upper = 4*R)$root,
+          lower = -4*R, upper = 4*R, tol = .Machine$double.eps)$root,
           error = function(e) FALSE) == FALSE){
 
           if(tryCatch(s.hat <- stats::uniroot(function(s){
             spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-            lower = -8*R, upper = 8*R)$root,
+            lower = -8*R, upper = 8*R, tol = .Machine$double.eps)$root,
             error = function(e) FALSE) == FALSE){
 
             if(tryCatch(s.hat <- stats::uniroot(function(s){
               spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-              lower = -16*R, upper = 16*R)$root,
+              lower = -16*R, upper = 16*R, tol = .Machine$double.eps)$root,
               error = function(e) FALSE) == FALSE){
 
               if(tryCatch(s.hat <- stats::uniroot(function(s){
                 spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-                lower = -32*R, upper = 32*R)$root,
+                lower = -32*R, upper = 32*R, tol = .Machine$double.eps)$root,
                 error = function(e) FALSE) == FALSE){
 
                 if(tryCatch(s.hat <- stats::uniroot(function(s){
                   spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-                  lower = -64*R, upper = 64*R)$root,
+                  lower = -64*R, upper = 64*R, tol = .Machine$double.eps)$root,
                   error = function(e) FALSE) == FALSE){
 
                   if(tryCatch(s.hat <- stats::uniroot(function(s){
                     spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-                    lower = -128*R, upper = 128*R)$root,
+                    lower = -128*R, upper = 128*R, tol = .Machine$double.eps)$root,
                     error = function(e) FALSE) == FALSE){
 
                       temp.gcm <- "YES"
@@ -359,7 +360,8 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     return(list(test_stat = temp.gcm$test_stat,
                 p_value = temp.gcm$p_value,
                 cdf = NULL,
-                gcm.default = TRUE))
+                gcm.default = TRUE,
+                nan.spacrt = is.nan(p_value_opp)))
   }else{
     p_value <- 1 - p_value_opp
     # print(p_value)
@@ -373,10 +375,12 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
       return(list(test_stat = temp.gcm$test_stat,
                   p_value = temp.gcm$p_value,
                   cdf = NULL,
-                  gcm.default = TRUE))
+                  gcm.default = TRUE,
+                  nan.spacrt = is.nan(p_value_opp)))
     }else{
       return(list(test_stat = test_stat, p_value = p_value,
-                  cdf = spa.cdf, gcm.default = FALSE))
+                  cdf = spa.cdf, gcm.default = FALSE,
+                  nan.spacrt = is.nan(p_value_opp)))
     }
   }
 }
