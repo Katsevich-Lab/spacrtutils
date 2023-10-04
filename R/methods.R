@@ -278,9 +278,6 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam){
     n <- length(P)
 
-    # s.hat <- stats::uniroot(function(s){spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-    #                         lower = -100, upper = 100)$root
-
     R <- 10
     temp.gcm <- "NO"
 
@@ -352,7 +349,8 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
   if(is.nan(p_value_opp) == TRUE){
     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
-                            aux_info_X_on_Z = aux_info_X_on_Z, 
+                            fit_glm_X = fit_glm_Y, fit_glm_Y = fit_glm_Y,
+                            aux_info_X_on_Z = aux_info_X_on_Z,
                             aux_info_Y_on_Z = aux_info_Y_on_Z)
 
     # return test statistic, GCM p-value, and null CDF
@@ -366,7 +364,8 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
     if(p_value < 0 | p_value > 1){
       temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
-                              aux_info_X_on_Z = aux_info_X_on_Z, 
+                              fit_glm_X = fit_glm_X, fit_glm_Y = fit_glm_Y,
+                              aux_info_X_on_Z = aux_info_X_on_Z,
                               aux_info_Y_on_Z = aux_info_Y_on_Z)
 
       # return test statistic, GCM p-value, and null CDF
