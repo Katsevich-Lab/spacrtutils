@@ -72,7 +72,7 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   # compute the p-value by comparing test statistic to normal distribution
   p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)
   # return test statistic and p-value
-  return(list(test_stat = test_stat, p_value = p_value, 
+  return(list(test_stat = test_stat, p_value = p_value,
               unnormalized_test_stat = 1/sqrt(n)*sum(prod_resids)))
 }
 
@@ -385,9 +385,4 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 }
 
 
-
-
-
-
-
-
+# spacrt - methods.R
