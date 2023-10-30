@@ -496,7 +496,6 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   # aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
 
   if(Y_on_Z_fam == 'negative.binomial'){
-
     if(is.numeric(aux_info_Y_on_Z)){
       theta_hat <- aux_info_Y_on_Z
     }else theta_hat <- aux_info_Y_on_Z$theta_hat
