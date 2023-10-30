@@ -1,7 +1,7 @@
 #####################################################################################
 #' The generalized covariance measure test of Shah and Peters.
 #'
-#' \code{GCM} is a function carrying out the GCM test based on GLMs for X|Z and Y|Z.
+#' \code{GCM} is a function carrying out the GCM test based on GLMs for `X|Z` and `Y|Z`.
 #'
 #' @param data A named list with fields \code{X} (an nx1 vector for the predictor
 #' variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
@@ -10,10 +10,12 @@
 #' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, \code{negative.binomial}, etc).
 #' @param Y_on_Z_fam The GLM family for the regression of Y on Z
 #' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, \code{negative.binomial}, etc).
-#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating E[X|Z].
-#' Default is TRUE. If set to FALSE, mean of X is used to estimate E[X|Z].
-#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating E[Y|Z].
-#' Default is TRUE. If set to FALSE, mean of Y is used to estimate E[Y|Z].
+#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating `E[X|Z]`.
+#' Default is TRUE. If set to FALSE, mean of X is used to estimate `E[X|Z]`.
+#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating `E[Y|Z]`.
+#' Default is TRUE. If set to FALSE, mean of Y is used to estimate `E[Y|Z]`.
+#' @param test_side A categorical variable indicating if the cnocerned test is a right-sided test,
+#' or a left-sided test, or a both-sided test.
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -34,6 +36,7 @@
 #' @export
 GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                 fit_glm_X = TRUE, fit_glm_Y = TRUE,
+                test_side = 'right',
                 aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   # extract (X,Y,Z) from inputted data
@@ -66,11 +69,16 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
   # compute the products of residuals for each observation
   prod_resids <- (X-X_on_Z_fit$fitted.values)*(Y-Y_on_Z_fit$fitted.values)
+
   # compute the test statistic
   n <- length(X)
   test_stat <- 1/sqrt(n)*sum(prod_resids)/stats::sd(prod_resids) * sqrt(n/(n-1))
+
   # compute the p-value by comparing test statistic to normal distribution
-  p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)
+  if(test_side == 'right'){p_value <- stats::pnorm(test_stat, lower.tail = FALSE)}
+  if(test_side == 'left'){p_value <- stats::pnorm(test_stat, lower.tail = TRUE)}
+  if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
+
   # return test statistic and p-value
   return(list(test_stat = test_stat, p_value = p_value,
               unnormalized_test_stat = 1/sqrt(n)*sum(prod_resids)))
@@ -80,7 +88,7 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #####################################################################################
 #' The distilled conditional randomization test.
 #'
-#' \code{dCRT} is a function carrying out the dCRT based on GLMs for X|Z and Y|Z.
+#' \code{dCRT} is a function carrying out the dCRT based on GLMs for `X|Z` and `Y|Z`.
 #'
 #' @param data A named list with fields \code{X} (an nx1 vector for the predictor
 #' variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
@@ -94,10 +102,12 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' normalized.
 #' @param return_resamples A logical variable indicating whether to return the
 #' resampled test statistics.
-#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating E[X|Z].
-#' Default is TRUE. If set to FALSE, mean of X is used to estimate E[X|Z].
-#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating E[Y|Z].
-#' Default is TRUE. If set to FALSE, mean of Y is used to estimate E[Y|Z].
+#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating `E[X|Z]`.
+#' Default is TRUE. If set to FALSE, mean of X is used to estimate `E[X|Z]`.
+#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating `E[Y|Z]`.
+#' Default is TRUE. If set to FALSE, mean of Y is used to estimate `E[Y|Z]`.
+#' @param test_side A categorical variable indicating if the cnocerned test is a right-sided test,
+#' or a left-sided test, or a both-sided test.
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -118,9 +128,10 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' results$test_stat
 #' results$p_value
 #' @export
-dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
+dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
                  normalize = FALSE, return_resamples = FALSE,
                  fit_glm_X = TRUE, fit_glm_Y = TRUE,
+                 test_side = 'right',
                  aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
@@ -176,7 +187,11 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
   }
 
   # compute the p-value by comparing test statistic to resampling distribution
-  p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))
+  if(test_side == 'right'){p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))}
+  if(test_side == 'left'){p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp <= test_stat))}
+  if(test_side == 'both'){
+    p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= abs(test_stat) |
+                                    prod_resid_resamp <= -abs(test_stat)))}
 
   # return test statistic and p-value
   return(list(test_stat = test_stat, p_value = p_value))
@@ -187,7 +202,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
 #' The saddlepoint approximation to the dCRT.
 #'
 #' \code{spaCRT} is a function carrying out the saddlepoint approximation to the
-#' dCRT based on GLMs for X|Z and Y|Z.
+#' dCRT based on GLMs for `X|Z` and `Y|Z`.
 #'
 #' @param data A named list with fields \code{X} (an nx1 vector for the predictor
 #' variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
@@ -199,10 +214,12 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
 #' @param normalize A logical variable indicating whether the spaCRT is based on
 #' the normalized test statistic.
 #' @param return_cdf A logical variable indicating whether to return the CDF
-#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating E[X|Z].
-#' Default is TRUE. If set to FALSE, mean of X is used to estimate E[X|Z].
-#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating E[Y|Z].
-#' Default is TRUE. If set to FALSE, mean of Y is used to estimate E[Y|Z].
+#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating `E[X|Z]`.
+#' Default is TRUE. If set to FALSE, mean of X is used to estimate `E[X|Z]`.
+#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating `E[Y|Z]`.
+#' Default is TRUE. If set to FALSE, mean of Y is used to estimate `E[Y|Z]`.
+#' @param test_side A categorical variable indicating if the cnocerned test is a right-sided test,
+#' or a left-sided test, or a both-sided test.
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -231,10 +248,15 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B,
 spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                    normalize = FALSE, return_cdf = FALSE,
                    fit_glm_X = TRUE, fit_glm_Y = TRUE,
+                   test_side = 'right',
                    aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
     stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
+  }
+
+  if(!(test_side %in% c('right','left','both'))){
+    stop("The test must be either right-sided, or left-sided, or both-sided!")
   }
 
   X <- data$X; Y <- data$Y; Z <- data$Z
@@ -351,6 +373,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   if(is.nan(p_value_opp) == TRUE){
     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
                             fit_glm_X = fit_glm_Y, fit_glm_Y = fit_glm_Y,
+                            test_side = test_side,
                             aux_info_X_on_Z = aux_info_X_on_Z,
                             aux_info_Y_on_Z = aux_info_Y_on_Z)
 
@@ -361,12 +384,13 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                 gcm.default = TRUE,
                 nan.spacrt = is.nan(p_value_opp)))
   }else{
-    p_value <- 1 - p_value_opp
+    # p_value <- 1 - p_value_opp
     # print(p_value)
 
-    if(p_value < 0 | p_value > 1){
+    if(p_value_opp < 0 | p_value_opp > 1){
       temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
                               fit_glm_X = fit_glm_X, fit_glm_Y = fit_glm_Y,
+                              test_side = test_side,
                               aux_info_X_on_Z = aux_info_X_on_Z,
                               aux_info_Y_on_Z = aux_info_Y_on_Z)
 
@@ -377,12 +401,132 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                   gcm.default = TRUE,
                   nan.spacrt = is.nan(p_value_opp)))
     }else{
-      return(list(test_stat = test_stat, p_value = p_value,
+      if(test_side == 'right'){p_value_temp <- 1 - p_value_opp}
+      if(test_side == 'left'){p_value_temp <- p_value_opp}
+      if(test_side == 'both'){p_value_temp <- 2*min(c(p_value_opp, 1 - p_value_opp))}
+
+      return(list(test_stat = test_stat, p_value = p_value_temp,
                   cdf = spa.cdf, gcm.default = FALSE,
                   nan.spacrt = is.nan(p_value_opp)))
     }
   }
 }
+
+
+
+#####################################################################################
+#' Score Test
+#'
+#' \code{score.test} is a function carrying out the saddlepoint approximation to the
+#' dCRT based on GLMs for `X|Z` and `Y|Z`.
+#'
+#' @param data A named list with fields \code{X} (an nx1 vector for the predictor
+#' variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
+#' (an nxp matrix of covariates).
+#' @param X_on_Z_fam The GLM family for the regression of X on Z
+#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' @param Y_on_Z_fam The GLM family for the regression of Y on Z
+#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' @param fit_glm_X A logical variable indicating whether to use GLM for estimating `E[X|Z]`.
+#' Default is TRUE. If set to FALSE, mean of X is used to estimate `E[X|Z]`.
+#' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating `E[Y|Z]`.
+#' Default is TRUE. If set to FALSE, mean of Y is used to estimate `E[Y|Z]`.
+#' @param test_side A categorical variable indicating if the cnocerned test is a right-sided test,
+#' or a left-sided test, or a both-sided test.
+#' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
+#' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
+#' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
+#' (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
+#'
+#' @examples
+#' n <- 20; p <- 2; normalize <- FALSE; return_cdf <- FALSE
+#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
+#'              Y = rpois(n = n, lambda = 1),
+#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+#' X_on_Z_fam <- "binomial"
+#' Y_on_Z_fam <- "poisson"
+#' results <- score.test(data, X_on_Z_fam, Y_on_Z_fam)
+#' results$test_stat
+#' results$p_value
+#'
+#' @return A named list with fields \code{test_stat} and \code{p_value}.
+#'
+#' @export
+score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
+                       fit_glm_X = TRUE, fit_glm_Y = TRUE,
+                       test_side = 'right',
+                       aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL){
+
+  if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
+    stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
+  }
+
+  if(!(test_side %in% c('right','left','both'))){
+    stop("The test must be either right-sided, or left-sided, or both-sided!")
+  }
+
+  X <- data$X; Y <- data$Y; Z <- data$Z
+  n <- length(X)
+
+  # fit X on Z and Y on Z regressions
+  if(!fit_glm_X){
+    X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
+  }else{
+    if(X_on_Z_fam == "negative.binomial"){
+      X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
+                                                family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
+                                                mustart = aux_info_X_on_Z$fitted_values))
+    }else{
+      X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
+    }
+  }
+
+  if(!fit_glm_Y){
+    Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
+  }else{
+    if(Y_on_Z_fam == "negative.binomial"){
+      Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                                family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                                mustart = aux_info_Y_on_Z$fitted_values))
+    }else{
+      Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+    }
+  }
+
+  aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
+
+  if(Y_on_Z_fam == 'negative.binomial'){
+    glm_fit <- stats::glm(Y ~ Z,
+                   family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                   mustart = aux_info_Y_on_Z$fitted_values)
+
+    results.scoretest <- statmod::glm.scoretest(
+      fit = glm_fit,
+      x2 = X
+    )
+
+  }else if(Y_on_Z_fam == 'poisson'){
+    glm_fit <- stats::glm(Y ~ Z,
+                   family = stats::poisson(),
+                   mustart = aux_info_Y_on_Z$fitted_values)
+
+    results.scoretest <- statmod::glm.scoretest(
+      fit = glm_fit,
+      x2 = X
+      # dispersion = aux_info_Y_on_Z$theta_hat
+    )
+  }
+
+  # compute the p-value by comparing test statistic to normal distribution
+  if(test_side == 'right'){p_value <- stats::pnorm(results.scoretest, lower.tail = FALSE)}
+  if(test_side == 'left'){p_value <- stats::pnorm(results.scoretest, lower.tail = TRUE)}
+  if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(results.scoretest), lower.tail = FALSE)}
+
+  return(list(test_stat = results.scoretest, p_value = p_value))
+
+}
+
+
 
 
 # spacrt - methods.R
