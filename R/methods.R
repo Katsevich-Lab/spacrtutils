@@ -493,14 +493,19 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 
-  aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
+  # aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
 
   if(Y_on_Z_fam == 'negative.binomial'){
+
+    if(is.numeric(aux_info_Y_on_Z)){
+      theta_hat <- aux_info_Y_on_Z
+    }else theta_hat <- aux_info_Y_on_Z$theta_hat
+
     glm_fit <- stats::glm(Y ~ Z,
-                   family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                   family = MASS::negative.binomial(theta_hat),
                    mustart = aux_info_Y_on_Z$fitted_values)
 
-    results.scoretest <- statmod::glm.scoretest(
+    test_stat <- statmod::glm.scoretest(
       fit = glm_fit,
       x2 = X
     )
@@ -510,7 +515,7 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                    family = stats::poisson(),
                    mustart = aux_info_Y_on_Z$fitted_values)
 
-    results.scoretest <- statmod::glm.scoretest(
+    test_stat <- statmod::glm.scoretest(
       fit = glm_fit,
       x2 = X
       # dispersion = aux_info_Y_on_Z$theta_hat
@@ -518,11 +523,11 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   }
 
   # compute the p-value by comparing test statistic to normal distribution
-  if(test_side == 'right'){p_value <- stats::pnorm(results.scoretest, lower.tail = FALSE)}
-  if(test_side == 'left'){p_value <- stats::pnorm(results.scoretest, lower.tail = TRUE)}
-  if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(results.scoretest), lower.tail = FALSE)}
+  if(test_side == 'right'){p_value <- stats::pnorm(test_stat, lower.tail = FALSE)}
+  if(test_side == 'left'){p_value <- stats::pnorm(test_stat, lower.tail = TRUE)}
+  if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
 
-  return(list(test_stat = results.scoretest, p_value = p_value))
+  return(list(test_stat = test_stat, p_value = p_value))
 
 }
 
