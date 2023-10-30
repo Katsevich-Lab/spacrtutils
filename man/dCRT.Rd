@@ -8,11 +8,12 @@ dCRT(
   data,
   X_on_Z_fam = NULL,
   Y_on_Z_fam = NULL,
-  B,
+  B = 2000,
   normalize = FALSE,
   return_resamples = FALSE,
   fit_glm_X = TRUE,
   fit_glm_Y = TRUE,
+  test_side = "right",
   aux_info_X_on_Z = NULL,
   aux_info_Y_on_Z = NULL
 )
@@ -36,11 +37,14 @@ normalized.}
 \item{return_resamples}{A logical variable indicating whether to return the
 resampled test statistics.}
 
-\item{fit_glm_X}{A logical variable indicating whether to use GLM for estimating E\link{X|Z}.
-Default is TRUE. If set to FALSE, mean of X is used to estimate E\link{X|Z}.}
+\item{fit_glm_X}{A logical variable indicating whether to use GLM for estimating \code{E[X|Z]}.
+Default is TRUE. If set to FALSE, mean of X is used to estimate \code{E[X|Z]}.}
 
-\item{fit_glm_Y}{A logical variable indicating whether to use GLM for estimating E\link{Y|Z}.
-Default is TRUE. If set to FALSE, mean of Y is used to estimate E\link{Y|Z}.}
+\item{fit_glm_Y}{A logical variable indicating whether to use GLM for estimating \code{E[Y|Z]}.
+Default is TRUE. If set to FALSE, mean of Y is used to estimate \code{E[Y|Z]}.}
+
+\item{test_side}{A categorical variable indicating if the cnocerned test is a right-sided test,
+or a left-sided test, or a both-sided test.}
 
 \item{aux_info_X_on_Z}{The auxiliary information that may be used for complex GLM regression
 (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
@@ -54,7 +58,7 @@ A named list with fields \code{test_stat}, \code{p_value}, and
 is returned only if \code{return_resamples == TRUE}.
 }
 \description{
-\code{dCRT} is a function carrying out the dCRT based on GLMs for X|Z and Y|Z.
+\code{dCRT} is a function carrying out the dCRT based on GLMs for \code{X|Z} and \code{Y|Z}.
 }
 \examples{
 n <- 20; p <- 2; B <- 100; normalize <- FALSE; return_resamples <- FALSE
