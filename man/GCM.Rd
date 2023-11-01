@@ -10,7 +10,6 @@ GCM(
   Y_on_Z_fam = NULL,
   fit_glm_X = TRUE,
   fit_glm_Y = TRUE,
-  test_side = "right",
   aux_info_X_on_Z = NULL,
   aux_info_Y_on_Z = NULL
 )
@@ -31,9 +30,6 @@ Default is TRUE. If set to FALSE, mean of X is used to estimate \code{E[X|Z]}.}
 
 \item{fit_glm_Y}{A logical variable indicating whether to use GLM for estimating \code{E[Y|Z]}.
 Default is TRUE. If set to FALSE, mean of Y is used to estimate \code{E[Y|Z]}.}
-
-\item{test_side}{A categorical variable indicating if the cnocerned test is a right-sided test,
-or a left-sided test, or a both-sided test.}
 
 \item{aux_info_X_on_Z}{The auxiliary information that may be used for complex GLM regression
 (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}

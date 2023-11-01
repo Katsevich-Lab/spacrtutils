@@ -14,8 +14,6 @@
 #' Default is TRUE. If set to FALSE, mean of X is used to estimate `E[X|Z]`.
 #' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating `E[Y|Z]`.
 #' Default is TRUE. If set to FALSE, mean of Y is used to estimate `E[Y|Z]`.
-#' @param test_side A categorical variable indicating if the cnocerned test is a right-sided test,
-#' or a left-sided test, or a both-sided test.
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -37,7 +35,6 @@
 #' @export
 GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                 fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                test_side = 'right',
                 aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   # extract (X,Y,Z) from inputted data
@@ -84,7 +81,7 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   return(list(test_stat = test_stat, 
               left_side_p_value =  stats::pnorm(test_stat, lower.tail = TRUE),
               right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
-              two_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
+              both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
               unnormalized_test_stat = 1/sqrt(n)*sum(prod_resids)))
 }
 
@@ -110,8 +107,6 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' Default is TRUE. If set to FALSE, mean of X is used to estimate `E[X|Z]`.
 #' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating `E[Y|Z]`.
 #' Default is TRUE. If set to FALSE, mean of Y is used to estimate `E[Y|Z]`.
-#' @param test_side A categorical variable indicating if the cnocerned test is a right-sided test,
-#' or a left-sided test, or a both-sided test.
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -136,7 +131,6 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
                  normalize = FALSE, return_resamples = FALSE,
                  fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                 test_side = 'right',
                  aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
@@ -204,7 +198,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
   return(list(test_stat = test_stat, 
               left_side_p_value = left_side_p_value,
               right_side_p_value = right_side_p_value,
-              two_side_p_value = 2*min(left_side_p_value, right_side_p_value)))
+              both_side_p_value = 2*min(left_side_p_value, right_side_p_value)))
 }
 
 
@@ -228,8 +222,6 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
 #' Default is TRUE. If set to FALSE, mean of X is used to estimate `E[X|Z]`.
 #' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating `E[Y|Z]`.
 #' Default is TRUE. If set to FALSE, mean of Y is used to estimate `E[Y|Z]`.
-#' @param test_side A categorical variable indicating if the cnocerned test is a right-sided test,
-#' or a left-sided test, or a both-sided test.
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -259,15 +251,10 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
 spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                    normalize = FALSE, return_cdf = FALSE,
                    fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                   test_side = 'right',
                    aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
     stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
-  }
-
-  if(!(test_side %in% c('right','left','both'))){
-    stop("The test must be either right-sided, or left-sided, or both-sided!")
   }
 
   X <- data$X; Y <- data$Y; Z <- data$Z
@@ -384,7 +371,6 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   if(is.nan(p_value_opp) == TRUE){
     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
                             fit_glm_X = fit_glm_Y, fit_glm_Y = fit_glm_Y,
-                            test_side = test_side,
                             aux_info_X_on_Z = aux_info_X_on_Z,
                             aux_info_Y_on_Z = aux_info_Y_on_Z)
 
@@ -403,7 +389,6 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     if(p_value_opp < 0 | p_value_opp > 1){
       temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
                               fit_glm_X = fit_glm_X, fit_glm_Y = fit_glm_Y,
-                              test_side = test_side,
                               aux_info_X_on_Z = aux_info_X_on_Z,
                               aux_info_Y_on_Z = aux_info_Y_on_Z)
 
@@ -449,8 +434,6 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' Default is TRUE. If set to FALSE, mean of X is used to estimate `E[X|Z]`.
 #' @param fit_glm_Y A logical variable indicating whether to use GLM for estimating `E[Y|Z]`.
 #' Default is TRUE. If set to FALSE, mean of Y is used to estimate `E[Y|Z]`.
-#' @param test_side A categorical variable indicating if the cnocerned test is a right-sided test,
-#' or a left-sided test, or a both-sided test.
 #' @param aux_info_X_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
@@ -473,15 +456,10 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' @export
 score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                        fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                       test_side = 'right',
                        aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL){
 
   if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
     stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
-  }
-
-  if(!(test_side %in% c('right','left','both'))){
-    stop("The test must be either right-sided, or left-sided, or both-sided!")
   }
 
   X <- data$X; Y <- data$Y; Z <- data$Z
