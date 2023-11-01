@@ -49,7 +49,8 @@ or a left-sided test, or a both-sided test.}
 (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
 }
 \value{
-A named list with fields \code{test_stat}, \code{p_value}, \code{cdf}, and
+A named list with fields \code{test_stat}, \code{left_side_p_value},
+\code{right_side_p_value}, \code{both_side_p_value}, \code{cdf}, and
 \code{gcm.default}.
 Here, cdf is a function that takes in a value t and returns the
 saddlepoint approximation to the CDF of the resampling distribution of the

@@ -53,7 +53,8 @@ or a left-sided test, or a both-sided test.}
 (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
 }
 \value{
-A named list with fields \code{test_stat}, \code{p_value}, and
+A named list with fields \code{test_stat}, \code{left_side_p_value},
+\code{right_side_p_value}, \code{both_side_p_value} and
 \code{resamples}. Here, \code{resamples} is a vector of length \code{B}. It
 is returned only if \code{return_resamples == TRUE}.
 }

@@ -42,7 +42,8 @@ or a left-sided test, or a both-sided test.}
 (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
 }
 \value{
-A named list with fields \code{test_stat} and \code{p_value}.
+A named list with fields \code{test_stat} and \code{left_side_p_value},
+\code{right_side_p_value} and \code{both_side_p_value}.
 }
 \description{
 \code{score.test} is a function carrying out the saddlepoint approximation to the

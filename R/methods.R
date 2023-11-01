@@ -21,7 +21,8 @@
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #'
-#' @return A named list with fields \code{test_stat} and \code{p_value}.
+#' @return A named list with fields \code{test_stat} and \code{left_side_p_value},
+#' \code{right_side_p_value}, \code{both_side_p_value}.
 #'
 #' @examples
 #' n <- 20; p <- 2
@@ -75,12 +76,15 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   test_stat <- 1/sqrt(n)*sum(prod_resids)/stats::sd(prod_resids) * sqrt(n/(n-1))
 
   # compute the p-value by comparing test statistic to normal distribution
-  if(test_side == 'right'){p_value <- stats::pnorm(test_stat, lower.tail = FALSE)}
-  if(test_side == 'left'){p_value <- stats::pnorm(test_stat, lower.tail = TRUE)}
-  if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
+  # if(test_side == 'right'){p_value <- stats::pnorm(test_stat, lower.tail = FALSE)}
+  # if(test_side == 'left'){p_value <- stats::pnorm(test_stat, lower.tail = TRUE)}
+  # if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
 
   # return test statistic and p-value
-  return(list(test_stat = test_stat, p_value = p_value,
+  return(list(test_stat = test_stat, 
+              left_side_p_value =  stats::pnorm(test_stat, lower.tail = TRUE),
+              right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
+              two_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
               unnormalized_test_stat = 1/sqrt(n)*sum(prod_resids)))
 }
 
@@ -113,7 +117,8 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #'
-#' @return A named list with fields \code{test_stat}, \code{p_value}, and
+#' @return A named list with fields \code{test_stat}, \code{left_side_p_value},
+#' \code{right_side_p_value}, \code{both_side_p_value} and
 #' \code{resamples}. Here, \code{resamples} is a vector of length \code{B}. It
 #' is returned only if \code{return_resamples == TRUE}.
 #'
@@ -187,14 +192,19 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
   }
 
   # compute the p-value by comparing test statistic to resampling distribution
-  if(test_side == 'right'){p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))}
-  if(test_side == 'left'){p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp <= test_stat))}
-  if(test_side == 'both'){
-    p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= abs(test_stat) |
-                                    prod_resid_resamp <= -abs(test_stat)))}
+  # if(test_side == 'right'){p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))}
+  # if(test_side == 'left'){p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp <= test_stat))}
+  # if(test_side == 'both'){
+  #   p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= abs(test_stat) |
+  #                                   prod_resid_resamp <= -abs(test_stat)))}
 
   # return test statistic and p-value
-  return(list(test_stat = test_stat, p_value = p_value))
+  left_side_p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp <= test_stat))
+  right_side_p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))
+  return(list(test_stat = test_stat, 
+              left_side_p_value = left_side_p_value,
+              right_side_p_value = right_side_p_value,
+              two_side_p_value = 2*min(left_side_p_value, right_side_p_value)))
 }
 
 
@@ -236,7 +246,8 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
 #' results$test_stat
 #' results$p_value
 #'
-#' @return A named list with fields \code{test_stat}, \code{p_value}, \code{cdf}, and
+#' @return A named list with fields \code{test_stat}, \code{left_side_p_value},
+#' \code{right_side_p_value}, \code{both_side_p_value}, \code{cdf}, and
 #' \code{gcm.default}.
 #' Here, cdf is a function that takes in a value t and returns the
 #' saddlepoint approximation to the CDF of the resampling distribution of the
@@ -379,7 +390,9 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
     # return test statistic, GCM p-value, and null CDF
     return(list(test_stat = temp.gcm$test_stat,
-                p_value = temp.gcm$p_value,
+                left_side_p_value = temp.gcm$left_side_p_value,
+                right_side_p_value = temp.gcm$right_side_p_value,
+                both_side_p_value = temp.gcm$both_side_p_value,
                 cdf = NULL,
                 gcm.default = TRUE,
                 nan.spacrt = is.nan(p_value_opp)))
@@ -396,16 +409,21 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
       # return test statistic, GCM p-value, and null CDF
       return(list(test_stat = temp.gcm$test_stat,
-                  p_value = temp.gcm$p_value,
+                  left_side_p_value = temp.gcm$left_side_p_value,
+                  right_side_p_value = temp.gcm$right_side_p_value,
+                  both_side_p_value = temp.gcm$both_side_p_value,
                   cdf = NULL,
                   gcm.default = TRUE,
                   nan.spacrt = is.nan(p_value_opp)))
     }else{
-      if(test_side == 'right'){p_value_temp <- 1 - p_value_opp}
-      if(test_side == 'left'){p_value_temp <- p_value_opp}
-      if(test_side == 'both'){p_value_temp <- 2*min(c(p_value_opp, 1 - p_value_opp))}
+      # if(test_side == 'right'){p_value_temp <- 1 - p_value_opp}
+      # if(test_side == 'left'){p_value_temp <- p_value_opp}
+      # if(test_side == 'both'){p_value_temp <- 2*min(c(p_value_opp, 1 - p_value_opp))}
 
-      return(list(test_stat = test_stat, p_value = p_value_temp,
+      return(list(test_stat = test_stat, 
+                  left_side_p_value = p_value_opp,
+                  right_side_p_value = 1 - p_value_opp,
+                  both_side_p_value = 2*min(c(p_value_opp, 1 - p_value_opp)),
                   cdf = spa.cdf, gcm.default = FALSE,
                   nan.spacrt = is.nan(p_value_opp)))
     }
@@ -449,7 +467,8 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' results$test_stat
 #' results$p_value
 #'
-#' @return A named list with fields \code{test_stat} and \code{p_value}.
+#' @return A named list with fields \code{test_stat} and \code{left_side_p_value},
+#' \code{right_side_p_value} and \code{both_side_p_value}.
 #'
 #' @export
 score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
@@ -522,11 +541,14 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   }
 
   # compute the p-value by comparing test statistic to normal distribution
-  if(test_side == 'right'){p_value <- stats::pnorm(test_stat, lower.tail = FALSE)}
-  if(test_side == 'left'){p_value <- stats::pnorm(test_stat, lower.tail = TRUE)}
-  if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
+  # if(test_side == 'right'){p_value <- stats::pnorm(test_stat, lower.tail = FALSE)}
+  # if(test_side == 'left'){p_value <- stats::pnorm(test_stat, lower.tail = TRUE)}
+  # if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
 
-  return(list(test_stat = test_stat, p_value = p_value))
+  return(list(test_stat = test_stat, 
+              left_side_p_value = stats::pnorm(test_stat, lower.tail = TRUE),
+              right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
+              both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)))
 
 }
 
