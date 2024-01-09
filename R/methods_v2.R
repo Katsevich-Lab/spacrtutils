@@ -35,7 +35,7 @@
 #' @export
 GCM_v2 <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                 fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                glm.nb.default == TRUE,
+                glm.nb.default = TRUE,
                 aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   # extract (X,Y,Z) from inputted data
@@ -144,7 +144,7 @@ GCM_v2 <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 dCRT_v2 <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
                  normalize = FALSE, return_resamples = FALSE,
                  fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                 glm.nb.default == TRUE,
+                 glm.nb.default = TRUE,
                  aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
@@ -277,7 +277,7 @@ dCRT_v2 <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
 spaCRT_v2 <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                    normalize = FALSE, return_cdf = FALSE,
                    fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                   glm.nb.default == TRUE,
+                   glm.nb.default = TRUE,
                    aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
   if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
