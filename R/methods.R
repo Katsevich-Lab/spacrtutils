@@ -78,7 +78,7 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   # if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
 
   # return test statistic and p-value
-  return(list(test_stat = test_stat, 
+  return(list(test_stat = test_stat,
               left_side_p_value =  stats::pnorm(test_stat, lower.tail = TRUE),
               right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
               both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
@@ -195,7 +195,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
   # return test statistic and p-value
   left_side_p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp <= test_stat))
   right_side_p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))
-  return(list(test_stat = test_stat, 
+  return(list(test_stat = test_stat,
               left_side_p_value = left_side_p_value,
               right_side_p_value = right_side_p_value,
               both_side_p_value = 2*min(left_side_p_value, right_side_p_value)))
@@ -251,7 +251,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
 spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                    normalize = FALSE, return_cdf = FALSE,
                    fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                   aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
+                   aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL, R = 1) {
 
   if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
     stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
@@ -299,7 +299,6 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam){
     n <- length(P)
 
-    R <- 10
     temp.gcm <- "NO"
 
     if(tryCatch(s.hat <- stats::uniroot(function(s){
@@ -309,44 +308,20 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
       if(tryCatch(s.hat <- stats::uniroot(function(s){
         spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-        lower = -2*R, upper = 2*R, tol = .Machine$double.eps)$root,
+        lower = -10*R, upper = 10*R, tol = .Machine$double.eps)$root,
         error = function(e) FALSE) == FALSE){
 
         if(tryCatch(s.hat <- stats::uniroot(function(s){
           spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-          lower = -4*R, upper = 4*R, tol = .Machine$double.eps)$root,
+          lower = -100*R, upper = 100*R, tol = .Machine$double.eps)$root,
           error = function(e) FALSE) == FALSE){
 
           if(tryCatch(s.hat <- stats::uniroot(function(s){
             spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-            lower = -8*R, upper = 8*R, tol = .Machine$double.eps)$root,
+            lower = -1000*R, upper = 1000*R, tol = .Machine$double.eps)$root,
             error = function(e) FALSE) == FALSE){
 
-            if(tryCatch(s.hat <- stats::uniroot(function(s){
-              spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-              lower = -16*R, upper = 16*R, tol = .Machine$double.eps)$root,
-              error = function(e) FALSE) == FALSE){
-
-              if(tryCatch(s.hat <- stats::uniroot(function(s){
-                spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-                lower = -32*R, upper = 32*R, tol = .Machine$double.eps)$root,
-                error = function(e) FALSE) == FALSE){
-
-                if(tryCatch(s.hat <- stats::uniroot(function(s){
-                  spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-                  lower = -64*R, upper = 64*R, tol = .Machine$double.eps)$root,
-                  error = function(e) FALSE) == FALSE){
-
-                  if(tryCatch(s.hat <- stats::uniroot(function(s){
-                    spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-                    lower = -128*R, upper = 128*R, tol = .Machine$double.eps)$root,
-                    error = function(e) FALSE) == FALSE){
-
-                      temp.gcm <- "YES"
-                  }
-                }
-              }
-            }
+              temp.gcm <- "YES"
           }
         }
       }
@@ -405,7 +380,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
       # if(test_side == 'left'){p_value_temp <- p_value_opp}
       # if(test_side == 'both'){p_value_temp <- 2*min(c(p_value_opp, 1 - p_value_opp))}
 
-      return(list(test_stat = test_stat, 
+      return(list(test_stat = test_stat,
                   left_side_p_value = p_value_opp,
                   right_side_p_value = 1 - p_value_opp,
                   both_side_p_value = 2*min(c(p_value_opp, 1 - p_value_opp)),
@@ -471,8 +446,8 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   }else{
     if(X_on_Z_fam == "negative.binomial"){
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z,
-                                                family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
-                                                mustart = aux_info_X_on_Z$fitted_values))
+                                  family = MASS::negative.binomial(aux_info_X_on_Z$theta_hat),
+                                  mustart = aux_info_X_on_Z$fitted_values))
     }else{
       X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
     }
@@ -482,9 +457,42 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
     if(Y_on_Z_fam == "negative.binomial"){
+
+      ###############
+
+      tryCatch({
+        # First try to fit the model using glm.nb
+        glm_fit <- suppressWarnings(
+          MASS::glm.nb(data$Y ~ data$Z)
+        )
+        test_stat <- statmod::glm.scoretest(
+          fit = glm_fit,
+          x2 = data$X
+        )
+
+        return(list(p.left = stats::pnorm(test_stat, lower.tail = TRUE),
+                    p.right = stats::pnorm(test_stat, lower.tail = FALSE),
+                    p.both = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)))
+      }, error = function(e) {
+        # use score test in the package
+        aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = data$Y, Z = data$Z))
+        aux_info_Y_on_Z$theta_hat <- 1
+
+        results.scoretest <- suppressWarnings(
+          spacrt::score.test(data, X_on_Z_fam, Y_on_Z_fam,
+                             fit_glm_X = TRUE, fit_glm_Y = TRUE,
+                             aux_info_Y_on_Z = aux_info_Y_on_Z)
+        )
+        return(list(p.left = results.scoretest$left_side_p_value,
+                    p.right = results.scoretest$right_side_p_value,
+                    p.both = results.scoretest$both_side_p_value))
+      })
+
+      ###############
+
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                                family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                                mustart = aux_info_Y_on_Z$fitted_values))
+                                  family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                  mustart = aux_info_Y_on_Z$fitted_values))
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
     }
@@ -523,7 +531,7 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   # if(test_side == 'left'){p_value <- stats::pnorm(test_stat, lower.tail = TRUE)}
   # if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
 
-  return(list(test_stat = test_stat, 
+  return(list(test_stat = test_stat,
               left_side_p_value = stats::pnorm(test_stat, lower.tail = TRUE),
               right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
               both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)))
