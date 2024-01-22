@@ -51,9 +51,8 @@ data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
              Y = rpois(n = n, lambda = 1),
              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
 X_on_Z_fam <- "binomial"
-Y_on_Z_fam <- "poisson"
+Y_on_Z_fam <- "negative.binomial"
 results <- score.test(data, X_on_Z_fam, Y_on_Z_fam)
 results$test_stat
-results$p_value
 
 }
