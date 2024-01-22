@@ -46,7 +46,7 @@ A named list with fields \code{test_stat} and \code{left_side_p_value},
 dCRT based on GLMs for \code{X|Z} and \code{Y|Z}.
 }
 \examples{
-n <- 20; p <- 2; normalize <- FALSE; return_cdf <- FALSE
+n <- 50; p <- 2; normalize <- FALSE; return_cdf <- FALSE
 data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
              Y = rpois(n = n, lambda = 1),
              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))

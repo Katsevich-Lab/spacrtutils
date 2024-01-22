@@ -13,7 +13,8 @@ spaCRT(
   fit_glm_X = TRUE,
   fit_glm_Y = TRUE,
   aux_info_X_on_Z = NULL,
-  aux_info_Y_on_Z = NULL
+  aux_info_Y_on_Z = NULL,
+  R = 5
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ Default is TRUE. If set to FALSE, mean of Y is used to estimate \code{E[Y|Z]}.}
 
 \item{aux_info_Y_on_Z}{The auxiliary information that may be used for complex GLM regression
 (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
+
+\item{R}{Upper bound of search space for the saddlepoint}
 }
 \value{
 A named list with fields \code{test_stat}, \code{left_side_p_value},
