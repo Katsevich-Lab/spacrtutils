@@ -226,6 +226,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
 #' (For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #' @param aux_info_Y_on_Z The auxiliary information that may be used for complex GLM regression
 #' (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
+#' @param R Upper bound of search space for the saddlepoint
 #'
 #' @examples
 #' n <- 20; p <- 2; normalize <- FALSE; return_cdf <- FALSE
@@ -251,7 +252,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
 spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                    normalize = FALSE, return_cdf = FALSE,
                    fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                   aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL, R = 1) {
+                   aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL, R = 5) {
 
   if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
     stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
@@ -295,8 +296,10 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   # compute the test statistic
   test_stat <- 1/sqrt(n) * sum(prod_resids)
 
+  R <- abs(R)
+
   ##### SPA to CDF of T_n = S_n / sqrt(n)
-  spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam){
+  spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R = R){
     n <- length(P)
 
     temp.gcm <- "NO"
@@ -382,8 +385,8 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
       return(list(test_stat = test_stat,
                   left_side_p_value = p_value_opp,
-                  right_side_p_value = 1 - p_value_opp,
-                  both_side_p_value = 2*min(c(p_value_opp, 1 - p_value_opp)),
+                  right_side_p_value = 1-p_value_opp,
+                  both_side_p_value = 2*min(c(p_value_opp, 1-p_value_opp)),
                   cdf = spa.cdf, gcm.default = FALSE,
                   nan.spacrt = is.nan(p_value_opp)))
     }
@@ -415,7 +418,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' (For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).
 #'
 #' @examples
-#' n <- 20; p <- 2; normalize <- FALSE; return_cdf <- FALSE
+#' n <- 50; p <- 2; normalize <- FALSE; return_cdf <- FALSE
 #' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
 #'              Y = rpois(n = n, lambda = 1),
 #'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
@@ -457,85 +460,38 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
     if(Y_on_Z_fam == "negative.binomial"){
-
-      ###############
-
       tryCatch({
         # First try to fit the model using glm.nb
-        glm_fit <- suppressWarnings(
-          MASS::glm.nb(data$Y ~ data$Z)
-        )
-        test_stat <- statmod::glm.scoretest(
-          fit = glm_fit,
-          x2 = data$X
-        )
+        Y_on_Z_fit <- suppressWarnings(MASS::glm.nb(Y ~ Z))
+      },
+      error = function(e) {
+        if(is.null(aux_info_Y_on_Z) == TRUE){
+          aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
+        }
 
-        return(list(p.left = stats::pnorm(test_stat, lower.tail = TRUE),
-                    p.right = stats::pnorm(test_stat, lower.tail = FALSE),
-                    p.both = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)))
-      }, error = function(e) {
-        # use score test in the package
-        aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = data$Y, Z = data$Z))
-        aux_info_Y_on_Z$theta_hat <- 1
-
-        results.scoretest <- suppressWarnings(
-          spacrt::score.test(data, X_on_Z_fam, Y_on_Z_fam,
-                             fit_glm_X = TRUE, fit_glm_Y = TRUE,
-                             aux_info_Y_on_Z = aux_info_Y_on_Z)
-        )
-        return(list(p.left = results.scoretest$left_side_p_value,
-                    p.right = results.scoretest$right_side_p_value,
-                    p.both = results.scoretest$both_side_p_value))
+        Y_on_Z_fit <- stats::glm(Y ~ Z,
+                              family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                              mustart = aux_info_Y_on_Z$fitted_values)
       })
+    }else if(Y_on_Z_fam == 'poisson'){
+      if(is.null(aux_info_Y_on_Z) == TRUE){
+        aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
+      }
 
-      ###############
-
-      Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                  family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                  mustart = aux_info_Y_on_Z$fitted_values))
+      Y_on_Z_fit <- stats::glm(Y ~ Z,
+                            family = stats::poisson(),
+                            mustart = aux_info_Y_on_Z$fitted_values)
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
     }
   }
 
-  # aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
-
-  if(Y_on_Z_fam == 'negative.binomial'){
-    if(is.numeric(aux_info_Y_on_Z)){
-      theta_hat <- aux_info_Y_on_Z
-    }else theta_hat <- aux_info_Y_on_Z$theta_hat
-
-    glm_fit <- stats::glm(Y ~ Z,
-                   family = MASS::negative.binomial(theta_hat),
-                   mustart = aux_info_Y_on_Z$fitted_values)
-
-    test_stat <- statmod::glm.scoretest(
-      fit = glm_fit,
-      x2 = X
-    )
-
-  }else if(Y_on_Z_fam == 'poisson'){
-    glm_fit <- stats::glm(Y ~ Z,
-                   family = stats::poisson(),
-                   mustart = aux_info_Y_on_Z$fitted_values)
-
-    test_stat <- statmod::glm.scoretest(
-      fit = glm_fit,
-      x2 = X
-      # dispersion = aux_info_Y_on_Z$theta_hat
-    )
-  }
-
-  # compute the p-value by comparing test statistic to normal distribution
-  # if(test_side == 'right'){p_value <- stats::pnorm(test_stat, lower.tail = FALSE)}
-  # if(test_side == 'left'){p_value <- stats::pnorm(test_stat, lower.tail = TRUE)}
-  # if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
+  test_stat <- statmod::glm.scoretest(fit = Y_on_Z_fit, x2 = X)
 
   return(list(test_stat = test_stat,
               left_side_p_value = stats::pnorm(test_stat, lower.tail = TRUE),
               right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
               both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)))
-
 }
 
 
