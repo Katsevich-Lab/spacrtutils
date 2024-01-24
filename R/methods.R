@@ -60,8 +60,10 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                           family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
                           mustart = aux_info_Y_on_Z$fitted_values))
+      NB.disp.param <- aux_info_Y_on_Z$theta_hat
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+      NB.disp.param <- "Invalid request"
     }
   }
 
@@ -82,6 +84,7 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
               left_side_p_value =  stats::pnorm(test_stat, lower.tail = TRUE),
               right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
               both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
+              NB.disp.param = NB.disp.param,
               unnormalized_test_stat = 1/sqrt(n)*sum(prod_resids)))
 }
 
@@ -161,8 +164,10 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                             family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
                             mustart = aux_info_Y_on_Z$fitted_values))
+      NB.disp.param <- aux_info_Y_on_Z$theta_hat
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+      NB.disp.param <- "Invalid request"
     }
   }
 
@@ -198,7 +203,8 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
   return(list(test_stat = test_stat,
               left_side_p_value = left_side_p_value,
               right_side_p_value = right_side_p_value,
-              both_side_p_value = 2*min(left_side_p_value, right_side_p_value)))
+              both_side_p_value = 2*min(left_side_p_value, right_side_p_value),
+              NB.disp.param = NB.disp.param))
 }
 
 
@@ -281,8 +287,10 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                               family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
                               mustart = aux_info_Y_on_Z$fitted_values))
+      NB.disp.param <- aux_info_Y_on_Z$theta_hat
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+      NB.disp.param <- "Invalid request"
     }
   }
 
@@ -357,6 +365,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                 left_side_p_value = temp.gcm$left_side_p_value,
                 right_side_p_value = temp.gcm$right_side_p_value,
                 both_side_p_value = temp.gcm$both_side_p_value,
+                NB.disp.param = NB.disp.param,
                 cdf = NULL,
                 gcm.default = TRUE,
                 nan.spacrt = is.nan(p_value_opp)))
@@ -375,6 +384,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                   left_side_p_value = temp.gcm$left_side_p_value,
                   right_side_p_value = temp.gcm$right_side_p_value,
                   both_side_p_value = temp.gcm$both_side_p_value,
+                  NB.disp.param = NB.disp.param,
                   cdf = NULL,
                   gcm.default = TRUE,
                   nan.spacrt = is.nan(p_value_opp)))
@@ -387,7 +397,9 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                   left_side_p_value = p_value_opp,
                   right_side_p_value = 1-p_value_opp,
                   both_side_p_value = 2*min(c(p_value_opp, 1-p_value_opp)),
-                  cdf = spa.cdf, gcm.default = FALSE,
+                  NB.disp.param = NB.disp.param,
+                  cdf = spa.cdf,
+                  gcm.default = FALSE,
                   nan.spacrt = is.nan(p_value_opp)))
     }
   }
@@ -462,6 +474,7 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
       tryCatch({
         # First try to fit the model using glm.nb
         Y_on_Z_fit <- suppressWarnings(MASS::glm.nb(Y ~ Z))
+        NB.disp.param <- Y_on_Z_fit$theta
       },
       error = function(e) {
         if(is.null(aux_info_Y_on_Z) == TRUE){
@@ -471,6 +484,7 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
         Y_on_Z_fit <- stats::glm(Y ~ Z,
                               family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
                               mustart = aux_info_Y_on_Z$fitted_values)
+        NB.disp.param <- aux_info_Y_on_Z$theta_hat
       })
     }else if(Y_on_Z_fam == 'poisson'){
       if(is.null(aux_info_Y_on_Z) == TRUE){
@@ -480,8 +494,10 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
       Y_on_Z_fit <- stats::glm(Y ~ Z,
                             family = stats::poisson(),
                             mustart = aux_info_Y_on_Z$fitted_values)
+      NB.disp.param <- "Invalid request"
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+      NB.disp.param <- "Invalid request"
     }
   }
 
@@ -490,7 +506,8 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   return(list(test_stat = test_stat,
               left_side_p_value = stats::pnorm(test_stat, lower.tail = TRUE),
               right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
-              both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)))
+              both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
+              NB.disp.param = NB.disp.param))
 }
 
 
