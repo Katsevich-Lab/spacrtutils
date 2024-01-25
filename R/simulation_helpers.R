@@ -29,9 +29,11 @@ GCM_f <- function(data,
   results.GCM <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
                              aux_info_Y_on_Z = aux_info_Y_on_Z)
 
-  return(list(p.left = results.GCM$left_side_p_value,
+  return(list(test_stat = results.GCM$test_stat,
+              p.left = results.GCM$left_side_p_value,
               p.right = results.GCM$right_side_p_value,
-              p.both = results.GCM$both_side_p_value))
+              p.both = results.GCM$both_side_p_value,
+              NB.disp.param = results.GCM$NB.disp.param))
 }
 
 
@@ -71,9 +73,11 @@ dCRT_f <- function(data,
                                # test_side = 'right',
                                aux_info_Y_on_Z = aux_info_Y_on_Z)
 
-  return(list(p.left = results.dCRT$left_side_p_value,
+  return(list(test_stat = results.dCRT$test_stat,
+              p.left = results.dCRT$left_side_p_value,
               p.right = results.dCRT$right_side_p_value,
-              p.both = results.dCRT$both_side_p_value))
+              p.both = results.dCRT$both_side_p_value,
+              NB.disp.param = results.dCRT$NB.disp.param))
 }
 
 
@@ -110,9 +114,11 @@ spaCRT_f <- function(data,
                                    fit_glm_X = TRUE, fit_glm_Y = TRUE,
                                    aux_info_Y_on_Z = aux_info_Y_on_Z)
 
-  return(list(p.left = results.spaCRT$left_side_p_value,
+  return(list(test_stat = results.spaCRT$test_stat,
+              p.left = results.spaCRT$left_side_p_value,
               p.right = results.spaCRT$right_side_p_value,
-              p.both = results.spaCRT$both_side_p_value))
+              p.both = results.spaCRT$both_side_p_value,
+              NB.disp.param = results.spaCRT$NB.disp.param))
 }
 
 
@@ -150,7 +156,9 @@ scoretest_glm_nb_f <- function(data,
                        aux_info_Y_on_Z = aux_info_Y_on_Z)
   )
 
-  return(list(p.left = results.scoretest$left_side_p_value,
+  return(list(test_stat = results.scoretest$test_stat,
+              p.left = results.scoretest$left_side_p_value,
               p.right = results.scoretest$right_side_p_value,
-              p.both = results.scoretest$both_side_p_value))
+              p.both = results.scoretest$both_side_p_value,
+              NB.disp.param = results.scoretest$NB.disp.param))
 }
