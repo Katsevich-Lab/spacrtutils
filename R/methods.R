@@ -352,7 +352,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   }
 
   p_value_opp <- suppressWarnings(spa.cdf(test_stat + 1/sqrt(n) * sum(P*W),
-                                          P = P, W = W, fam = X_on_Z_fam))
+                                          P = P, W = W, fam = X_on_Z_fam, R = R))
 
   if(is.nan(p_value_opp) == TRUE){
     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
