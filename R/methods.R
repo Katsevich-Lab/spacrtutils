@@ -37,10 +37,14 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                 fit_glm_X = TRUE, fit_glm_Y = TRUE,
                 aux_info_X_on_Z = NULL, aux_info_Y_on_Z = NULL) {
 
+  if(is.null(X_on_Z_fam) | is.null(Y_on_Z_fam)){
+    stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
+  }
+
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
 
-  # fit X on Z and Y on Z regressions
+  # fit X on Z regression
   if(!fit_glm_X){
     X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
@@ -53,6 +57,7 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 
+  # fit Y on Z regression
   if(!fit_glm_Y){
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
@@ -68,20 +73,15 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
   }
 
   # compute the products of residuals for each observation
-  prod_resids <- (X-X_on_Z_fit$fitted.values)*(Y-Y_on_Z_fit$fitted.values)
+  prod_resids <- (X - X_on_Z_fit$fitted.values)*(Y - Y_on_Z_fit$fitted.values)
 
   # compute the test statistic
   n <- length(X)
   test_stat <- 1/sqrt(n)*sum(prod_resids)/stats::sd(prod_resids) * sqrt(n/(n-1))
 
-  # compute the p-value by comparing test statistic to normal distribution
-  # if(test_side == 'right'){p_value <- stats::pnorm(test_stat, lower.tail = FALSE)}
-  # if(test_side == 'left'){p_value <- stats::pnorm(test_stat, lower.tail = TRUE)}
-  # if(test_side == 'both'){p_value <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)}
-
-  # return test statistic and p-value
+  # return test statistic, GCM p-values, and related quantities
   return(list(test_stat = test_stat,
-              left_side_p_value =  stats::pnorm(test_stat, lower.tail = TRUE),
+              left_side_p_value = stats::pnorm(test_stat, lower.tail = TRUE),
               right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
               both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
               NB.disp.param = NB.disp.param,
@@ -144,7 +144,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
 
-  # fit X on Z and Y on Z regressions
+  # fit X on Z regression
   if(!fit_glm_X){
     X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
@@ -157,6 +157,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
     }
   }
 
+  # fit Y on Z regression
   if(!fit_glm_Y){
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
@@ -170,8 +171,6 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
       NB.disp.param <- "Invalid request"
     }
   }
-
-
 
   # compute the products of residuals for each observation
   prod_resids <- (X - X_on_Z_fit$fitted.values)*(Y - Y_on_Z_fit$fitted.values)
@@ -190,16 +189,11 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL, B = 2000,
                                               (Y - Y_on_Z_fit$fitted.values))
   }
 
-  # compute the p-value by comparing test statistic to resampling distribution
-  # if(test_side == 'right'){p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))}
-  # if(test_side == 'left'){p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp <= test_stat))}
-  # if(test_side == 'both'){
-  #   p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= abs(test_stat) |
-  #                                   prod_resid_resamp <= -abs(test_stat)))}
-
-  # return test statistic and p-value
+  # compute p-values
   left_side_p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp <= test_stat))
   right_side_p_value <- 1/(B+1) * (1 + sum(prod_resid_resamp >= test_stat))
+
+  # return test statistic, dCRT p-values, and related quantities
   return(list(test_stat = test_stat,
               left_side_p_value = left_side_p_value,
               right_side_p_value = right_side_p_value,
@@ -264,10 +258,11 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
   }
 
+  # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
 
-  # fit X on Z and Y on Z regressions
+  # fit X on Z regression
   if(!fit_glm_X){
     X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
@@ -280,6 +275,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 
+  # fit Y on Z regression
   if(!fit_glm_Y){
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
@@ -294,20 +290,17 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 
-
   W <- Y - Y_on_Z_fit$fitted.values
   P <- X_on_Z_fit$fitted.values
 
   # compute the products of residuals for each observation
   prod_resids <- (X - X_on_Z_fit$fitted.values) * W
-  # prod_resids <- X * W
+
   # compute the test statistic
   test_stat <- 1/sqrt(n) * sum(prod_resids)
 
-  R <- abs(R)
-
   ##### SPA to CDF of T_n = S_n / sqrt(n)
-  spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R = R){
+  spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R){
     n <- length(P)
 
     temp.gcm <- "NO"
@@ -351,16 +344,19 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 
+  # perform saddlepoint approximation
   p_value_opp <- suppressWarnings(spa.cdf(test_stat + 1/sqrt(n) * sum(P*W),
-                                          P = P, W = W, fam = X_on_Z_fam, R = R))
+                                          P = P, W = W,
+                                          fam = X_on_Z_fam,
+                                          R = abs(R)))
 
   if(is.nan(p_value_opp) == TRUE){
     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
-                            fit_glm_X = fit_glm_Y, fit_glm_Y = fit_glm_Y,
+                            fit_glm_X = fit_glm_X, fit_glm_Y = fit_glm_Y,
                             aux_info_X_on_Z = aux_info_X_on_Z,
                             aux_info_Y_on_Z = aux_info_Y_on_Z)
 
-    # return test statistic, GCM p-value, and null CDF
+    # return test statistic, GCM p-values, and related quantities
     return(list(test_stat = temp.gcm$test_stat,
                 left_side_p_value = temp.gcm$left_side_p_value,
                 right_side_p_value = temp.gcm$right_side_p_value,
@@ -370,16 +366,13 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                 gcm.default = TRUE,
                 nan.spacrt = is.nan(p_value_opp)))
   }else{
-    # p_value <- 1 - p_value_opp
-    # print(p_value)
-
     if(p_value_opp < 0 | p_value_opp > 1){
       temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
                               fit_glm_X = fit_glm_X, fit_glm_Y = fit_glm_Y,
                               aux_info_X_on_Z = aux_info_X_on_Z,
                               aux_info_Y_on_Z = aux_info_Y_on_Z)
 
-      # return test statistic, GCM p-value, and null CDF
+      # return test statistic, GCM p-values, and related quantities
       return(list(test_stat = temp.gcm$test_stat,
                   left_side_p_value = temp.gcm$left_side_p_value,
                   right_side_p_value = temp.gcm$right_side_p_value,
@@ -389,14 +382,11 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                   gcm.default = TRUE,
                   nan.spacrt = is.nan(p_value_opp)))
     }else{
-      # if(test_side == 'right'){p_value_temp <- 1 - p_value_opp}
-      # if(test_side == 'left'){p_value_temp <- p_value_opp}
-      # if(test_side == 'both'){p_value_temp <- 2*min(c(p_value_opp, 1 - p_value_opp))}
-
+      # return test statistic, spaCRT p-values, and related quantities
       return(list(test_stat = test_stat,
                   left_side_p_value = p_value_opp,
-                  right_side_p_value = 1-p_value_opp,
-                  both_side_p_value = 2*min(c(p_value_opp, 1-p_value_opp)),
+                  right_side_p_value = 1 - p_value_opp,
+                  both_side_p_value = 2*min(c(p_value_opp, 1 - p_value_opp)),
                   NB.disp.param = NB.disp.param,
                   cdf = spa.cdf,
                   gcm.default = FALSE,
@@ -404,7 +394,6 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 }
-
 
 
 #####################################################################################
@@ -451,10 +440,11 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     stop("X_on_Z_fam and Y_on_Z_fam can't be empty!")
   }
 
+  # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
   n <- length(X)
 
-  # fit X on Z and Y on Z regressions
+  # fit X on Z regression
   if(!fit_glm_X){
     X_on_Z_fit <- list(fitted.values = rep(mean(X), length(X)))
   }else{
@@ -467,6 +457,7 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 
+  # fit Y on Z regression
   if(!fit_glm_Y){
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
@@ -501,8 +492,10 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     }
   }
 
+  # perform score test
   test_stat <- statmod::glm.scoretest(fit = Y_on_Z_fit, x2 = X)
 
+  # return test statistic, score test p-values, and related quantities
   return(list(test_stat = test_stat,
               left_side_p_value = stats::pnorm(test_stat, lower.tail = TRUE),
               right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
