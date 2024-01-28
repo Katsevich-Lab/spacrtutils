@@ -472,9 +472,9 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
           aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
         }
 
-        Y_on_Z_fit <- stats::glm(Y ~ Z,
-                              family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                              mustart = aux_info_Y_on_Z$fitted_values)
+        Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                                  family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                                  mustart = aux_info_Y_on_Z$fitted_values))
         NB.disp.param <- aux_info_Y_on_Z$theta_hat
       })
     }else if(Y_on_Z_fam == 'poisson'){
@@ -482,9 +482,9 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
         aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
       }
 
-      Y_on_Z_fit <- stats::glm(Y ~ Z,
-                            family = stats::poisson(),
-                            mustart = aux_info_Y_on_Z$fitted_values)
+      Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                                family = stats::poisson(),
+                                                mustart = aux_info_Y_on_Z$fitted_values))
       NB.disp.param <- "Invalid request"
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
