@@ -1,6 +1,6 @@
-
-# method helpers will go here (e.g. solving saddlepoint equations)
-
+#####################################################################################
+#' method helpers will go here (e.g. solving saddlepoint equations)
+#'
 #' \code{dCRT_dist} is a function that returns simulated data from an appropriate
 #' distribution depending on a specified  GLM family
 #'
@@ -28,9 +28,9 @@ dCRT_dist <- function(n, fitted.val, fam){
 }
 
 
-
-# method helpers will go here (e.g. solving saddlepoint equations)
-
+#####################################################################################
+#' method helpers will go here (e.g. solving saddlepoint equations)
+#'
 #' \code{wcgf} is a function computing the cumulant generating function (CGF) of
 #' distributions, multiplied by a weight function, from the GLM family
 #'
@@ -57,8 +57,10 @@ wcgf <- function(s, P, W, fam){
   if(fam == 'quasipoisson') return()
 }
 
+
+#####################################################################################
 #' \code{d1.wcgf} is a function computing the derivative of the cumulant generating
-#' function (CGF) of distributions, multiplied by a weight function, from the GLM family
+#' function (CGF) of distributions, multiplied by a weight function, from GLM family
 #'
 #' @param s The point where the CGF will be computed.
 #' @param P A vector containing the parameter values of the family of distributions.
@@ -82,12 +84,12 @@ d1.wcgf <- function(s, P, W, fam){
   if(fam == 'quasi') return()
   if(fam == 'quasibinomial') return()
   if(fam == 'quasipoisson') return()
-
-
 }
 
+
+#####################################################################################
 #' \code{d2.wcgf} is a function computing the hessian of the cumulant generating
-#' function (CGF) of distributions, multiplied by a weight function, from the GLM family
+#' function (CGF) of distributions, multiplied by a weight function, from GLM family
 #'
 #' @param s The point where the CGF will be computed.
 #' @param P A vector containing the parameter values of the family of distributions.
@@ -141,10 +143,10 @@ d2.wcgf <- function(s, P, W, fam){
     Q <- 1 - P
     return()
   }
-
 }
 
 
+#####################################################################################
 #' A function computing the dispersion parameter in negative binomial regression
 #'
 #' @param data A list containing the response Y and covariate Z
@@ -152,9 +154,11 @@ d2.wcgf <- function(s, P, W, fam){
 #' @return a list containing the Poisson model fitted values and estimate for dispersion
 #' @export
 nb_precomp <- function(data){
-  Y <- data$Y
-  Z <- data$Z
+
+  Y <- data$Y; Z <- data$Z
+
   pois_fit <- stats::glm.fit(y = Y, x = Z, family = stats::poisson())
+
   theta_hat <- sceptre:::estimate_theta(
     y = Y,
     mu = pois_fit$fitted.values,
@@ -162,18 +166,11 @@ nb_precomp <- function(data){
     limit = 50,
     eps = (.Machine$double.eps)^(1/4)
   )[[1]]
-  list(fitted_values = pois_fit$fitted.values, theta_hat = theta_hat)
+
+  return(list(fitted_values = pois_fit$fitted.values, theta_hat = theta_hat))
 }
 
 
 
 
-
-
-
-
-
-
-
-
-
+# spacrt - method_helpers.R
