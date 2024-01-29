@@ -462,10 +462,12 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
     Y_on_Z_fit <- list(fitted.values = rep(mean(Y), length(Y)))
   }else{
     if(Y_on_Z_fam == "negative.binomial"){
-      tryCatch({
-        # First try to fit the model using glm.nb
+      # First try to fit the model using glm.nb
+      temp.result <- tryCatch({
         Y_on_Z_fit <- suppressWarnings(MASS::glm.nb(Y ~ Z))
         NB.disp.param <- Y_on_Z_fit$theta
+
+        return(list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param))
       },
       error = function(e) {
         if(is.null(aux_info_Y_on_Z) == TRUE){
@@ -473,9 +475,11 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
         }
 
         Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                                  family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                                  mustart = aux_info_Y_on_Z$fitted_values))
+                                family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                mustart = aux_info_Y_on_Z$fitted_values))
         NB.disp.param <- aux_info_Y_on_Z$theta_hat
+
+        return(list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param))
       })
     }else if(Y_on_Z_fam == 'poisson'){
       if(is.null(aux_info_Y_on_Z) == TRUE){
@@ -486,21 +490,25 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                                                 family = stats::poisson(),
                                                 mustart = aux_info_Y_on_Z$fitted_values))
       NB.disp.param <- "Invalid request"
+
+      temp.result <- list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
     }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
       NB.disp.param <- "Invalid request"
+
+      temp.result <- list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
     }
   }
 
   # perform score test
-  test_stat <- statmod::glm.scoretest(fit = Y_on_Z_fit, x2 = X)
+  test_stat <- statmod::glm.scoretest(fit = temp.result$Y_on_Z_fit, x2 = X)
 
   # return test statistic, score test p-values, and related quantities
   return(list(test_stat = test_stat,
               left_side_p_value = stats::pnorm(test_stat, lower.tail = TRUE),
               right_side_p_value = stats::pnorm(test_stat, lower.tail = FALSE),
               both_side_p_value = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
-              NB.disp.param = NB.disp.param))
+              NB.disp.param = temp.result$NB.disp.param))
 }
 
 
