@@ -466,8 +466,7 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
       temp.result <- tryCatch({
         Y_on_Z_fit <- suppressWarnings(MASS::glm.nb(Y ~ Z))
         NB.disp.param <- Y_on_Z_fit$theta
-
-        return(list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param))
+        list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
       },
       error = function(e) {
         if(is.null(aux_info_Y_on_Z) == TRUE){
@@ -479,7 +478,7 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
                                 mustart = aux_info_Y_on_Z$fitted_values))
         NB.disp.param <- aux_info_Y_on_Z$theta_hat
 
-        return(list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param))
+        list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
       })
     }else if(Y_on_Z_fam == 'poisson'){
       if(is.null(aux_info_Y_on_Z) == TRUE){
