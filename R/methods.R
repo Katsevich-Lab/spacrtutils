@@ -514,3 +514,4 @@ score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 
 
 # spacrt - methods.R
+# STABLE VERSION
