@@ -3,7 +3,7 @@
 \name{d1.wcgf}
 \alias{d1.wcgf}
 \title{\code{d1.wcgf} is a function computing the derivative of the cumulant generating
-function (CGF) of distributions, multiplied by a weight function, from the GLM family}
+function (CGF) of distributions, multiplied by a weight function, from GLM family}
 \usage{
 d1.wcgf(s, P, W, fam)
 }
@@ -22,7 +22,7 @@ CGF of the weighted distribution evaluated at \code{s}.
 }
 \description{
 \code{d1.wcgf} is a function computing the derivative of the cumulant generating
-function (CGF) of distributions, multiplied by a weight function, from the GLM family
+function (CGF) of distributions, multiplied by a weight function, from GLM family
 }
 \examples{
 d1.wcgf(s = 5, P = c(1,1,2), W = c(1,1,1), fam = 'poisson')

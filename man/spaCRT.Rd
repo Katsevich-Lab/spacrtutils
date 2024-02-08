@@ -10,10 +10,6 @@ spaCRT(
   Y_on_Z_fam = NULL,
   normalize = FALSE,
   return_cdf = FALSE,
-  fit_glm_X = TRUE,
-  fit_glm_Y = TRUE,
-  aux_info_X_on_Z = NULL,
-  aux_info_Y_on_Z = NULL,
   R = 5
 )
 }
@@ -32,18 +28,6 @@ variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
 the normalized test statistic.}
 
 \item{return_cdf}{A logical variable indicating whether to return the CDF}
-
-\item{fit_glm_X}{A logical variable indicating whether to use GLM for estimating \code{E[X|Z]}.
-Default is TRUE. If set to FALSE, mean of X is used to estimate \code{E[X|Z]}.}
-
-\item{fit_glm_Y}{A logical variable indicating whether to use GLM for estimating \code{E[Y|Z]}.
-Default is TRUE. If set to FALSE, mean of Y is used to estimate \code{E[Y|Z]}.}
-
-\item{aux_info_X_on_Z}{The auxiliary information that may be used for complex GLM regression
-(For instance, when X_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
-
-\item{aux_info_Y_on_Z}{The auxiliary information that may be used for complex GLM regression
-(For instance, when Y_on_Z_fam = negative.binomial, the dispersion parameter should be provided).}
 
 \item{R}{Upper bound of search space for the saddlepoint}
 }

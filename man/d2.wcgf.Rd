@@ -3,7 +3,7 @@
 \name{d2.wcgf}
 \alias{d2.wcgf}
 \title{\code{d2.wcgf} is a function computing the hessian of the cumulant generating
-function (CGF) of distributions, multiplied by a weight function, from the GLM family}
+function (CGF) of distributions, multiplied by a weight function, from GLM family}
 \usage{
 d2.wcgf(s, P, W, fam)
 }
@@ -22,7 +22,7 @@ CGF of the weighted distribution evaluated at \code{s}.
 }
 \description{
 \code{d2.wcgf} is a function computing the hessian of the cumulant generating
-function (CGF) of distributions, multiplied by a weight function, from the GLM family
+function (CGF) of distributions, multiplied by a weight function, from GLM family
 }
 \examples{
 d2.wcgf(s = 5, P = c(1,1,2), W = c(1,1,1), fam = 'poisson')
