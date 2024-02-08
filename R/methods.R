@@ -25,7 +25,7 @@
 #' results$test_stat
 #' results$p_value
 #' @export
-GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL) {
+GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
 
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
@@ -97,7 +97,7 @@ GCM <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL) {
 #' results$test_stat
 #' results$p_value
 #' @export
-dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
+dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
                  B = 2000, normalize = FALSE, return_resamples = FALSE) {
 
   # extract (X,Y,Z) from inputted data
@@ -189,7 +189,7 @@ dCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' gcm.default returns TRUE if spacrt::GCM was employed due to the failure of spaCRT.
 #'
 #' @export
-spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
+spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
                    normalize = FALSE, return_cdf = FALSE, R = 5) {
 
   # extract (X,Y,Z) from inputted data
@@ -340,7 +340,7 @@ spaCRT <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL,
 #' \code{right_side_p_value} and \code{both_side_p_value}.
 #'
 #' @export
-score.test <- function(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL){
+score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
 
   # extract (X,Y,Z) from inputted data
   X <- data$X; Y <- data$Y; Z <- data$Z
