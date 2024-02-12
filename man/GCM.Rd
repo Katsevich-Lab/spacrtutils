@@ -4,7 +4,7 @@
 \alias{GCM}
 \title{The generalized covariance measure test of Shah and Peters.}
 \usage{
-GCM(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL)
+GCM(data, X_on_Z_fam, Y_on_Z_fam)
 }
 \arguments{
 \item{data}{A named list with fields \code{X} (an nx1 vector for the predictor

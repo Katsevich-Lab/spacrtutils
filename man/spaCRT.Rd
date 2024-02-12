@@ -6,8 +6,8 @@
 \usage{
 spaCRT(
   data,
-  X_on_Z_fam = NULL,
-  Y_on_Z_fam = NULL,
+  X_on_Z_fam,
+  Y_on_Z_fam,
   normalize = FALSE,
   return_cdf = FALSE,
   R = 5

@@ -4,7 +4,7 @@
 \alias{score.test}
 \title{Score Test}
 \usage{
-score.test(data, X_on_Z_fam = NULL, Y_on_Z_fam = NULL)
+score.test(data, X_on_Z_fam, Y_on_Z_fam)
 }
 \arguments{
 \item{data}{A named list with fields \code{X} (an nx1 vector for the predictor
