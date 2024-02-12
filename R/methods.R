@@ -281,7 +281,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
                 p.right = temp.gcm$p.right,
                 p.both = temp.gcm$p.both,
                 NB.disp.param = NB.disp.param,
-                cdf = NULL,
+                # cdf = NULL,
                 gcm.default = TRUE,
                 nan.spacrt = is.nan(p_value_opp)))
   }else{
@@ -294,7 +294,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
                   p.right = temp.gcm$p.right,
                   p.both = temp.gcm$p.both,
                   NB.disp.param = NB.disp.param,
-                  cdf = NULL,
+                  # cdf = NULL,
                   gcm.default = TRUE,
                   nan.spacrt = is.nan(p_value_opp)))
     }else{
@@ -304,7 +304,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
                   p.right = 1 - p_value_opp,
                   p.both = 2*min(c(p_value_opp, 1 - p_value_opp)),
                   NB.disp.param = NB.disp.param,
-                  cdf = spa.cdf,
+                  # cdf = spa.cdf,
                   gcm.default = FALSE,
                   nan.spacrt = is.nan(p_value_opp)))
     }
