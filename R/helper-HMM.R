@@ -130,3 +130,149 @@ compute_conditional_prob <- function(x, pInit, pEmit, Q){
   # return the conditional probability vector
   return(conditional_prob)
 }
+
+#' Compile fastPhase from R
+#'
+#' @param fp_path Path to fastPhase software
+#' @param X_file Path to inp file
+#' @param out_path Path to output file (can be either relative or absolute)
+#' @param K Number of latent states in Markov chain
+#' @param numit Number of iterations in EM algorithm
+#' @param phased Haplotyp (0, 1) or SNP (0,1,2)
+#' @param seed Seed for random start in fastPhase
+#'
+#' @return Output NULL if there is no error from fastPhase
+#' @export
+fastPhase_new <- function (fp_path, X_file, out_path = NULL, K = 12, numit = 25,
+                           phased = FALSE, seed = 1)
+{
+
+  # regulate/check the inputs
+  K = as.integer(K)
+  numit = as.integer(numit)
+  seed = as.integer(seed)
+  stopifnot(is.character(fp_path))
+  stopifnot(is.character(X_file))
+  stopifnot(is.null(out_path) | is.character(out_path))
+  stopifnot(is.integer(K))
+  stopifnot(is.integer(numit))
+  stopifnot(is.logical(phased))
+  stopifnot(is.integer(seed))
+  if (!file.exists(fp_path)) {
+    message(paste("SNPknock could find the fastPHASE executable: '",
+                  fp_path, "' does not exist.\nIf you have not downloaded it yet, you can obtain fastPHASE from: http://scheet.org/software.html",
+                  sep = ""))
+    return(NULL)
+  }
+  if (is.null(out_path)) {
+    out_path = tempfile(pattern = "file", tmpdir = tempdir(),
+                        fileext = "")
+  }
+
+  # compose the inputs for fastPhase
+  out_path_dirname = tools::file_path_as_absolute(dirname(out_path))
+  out_path_basename = basename(out_path)
+  out_path_abs = paste(out_path_dirname, sprintf("%s/", out_path_basename),
+                       sep = "/")
+  command = fp_path
+  command = paste(command, " -Pp -T1 -K", K, sep = "")
+  command = paste(command, " -M1 -g -H-4 -C", numit, sep = "")
+  if (phased) {
+    command = paste(command, " -B", sep = "")
+  }
+  command = paste(command, " -S", seed, sep = "")
+  command = paste(command, " -o'", out_path_abs, "' ", X_file,
+                  sep = "")
+  cat(command)
+
+  # run fastPhase
+  tryCatch(system(command), error = function(e) 1)
+
+  return(NULL)
+}
+
+#' Generate emission, transition and initial probabilites
+#'
+#' @param K Number of latent states
+#' @param M Support size of haplotype
+#' @param p Number of markers
+#' @param gamma Emission probability for X being 0
+#' @param stay_prob Stay probability for the Markov jump process
+#' @param initial_prob Initial probability vector
+#'
+#' @return List including final pEmit, Q and pInit
+#' @export
+help_dgp <- function(K, M, p,
+                     gamma,
+                     stay_prob,
+                     initial_prob = rep(1 / K, K)){
+
+  # initial state distribution
+  pInit <- setNames(initial_prob, sprintf("state_%d", 1:K))
+
+  # define transition matrix
+  transition_mat <- matrix(0, nrow = K, ncol = K)
+  diag(transition_mat) <- stay_prob
+  transition_mat[cbind(1:K, (1:K) %% K + 1)] <- 1 - stay_prob
+
+  # create emission distribution
+  emission_mat <- matrix(1 / M, nrow = M, ncol = K)
+  emission_mat[, 2 : K] <- c(gamma, rep((1 - gamma) / (M - 1), M - 1))
+
+  # Create an array for storing transition and emission distributions
+  Q <- array(0, dim = c(p - 1, K, K),
+             dimnames = list(
+               transition = 1:(p-1),
+               cur_state = sprintf("current_%d", 1:K),
+               tran_state = sprintf("transit_%d", 1:K)
+             ))
+  pEmit <- array(0, dim = c(p, M, K),
+                 dimnames = list(
+                   SNP = 1:p,
+                   obs_state = sprintf("obs_%d", 1:M),
+                   latent_state = sprintf("latent_%d", 1:K)
+                 ))
+
+  # construct array for emission and transition probabilities
+  for (SNP in 1:p) {
+    pEmit[SNP,,] <- emission_mat
+    if(SNP != p){
+      Q[SNP,,] <- transition_mat
+    }
+  }
+
+  # return the outputs
+  return(list(pEmit = pEmit, pInit = pInit, Q = Q))
+}
+
+#' rename the output from fastPhase
+#'
+#' @param Q Transition probability array
+#' @param pEmit Emission probability array
+#' @param pInit Initial probability vector
+#'
+#' @return A list including the renamed inputs
+#' @export
+name_output <- function(Q, pEmit, pInit){
+
+  # name transition probability array
+  dimnames(Q) <- list(
+    transition = 1:(dim(Q)[1]),
+    cur_state = sprintf("current_%d", 1:(dim(Q)[2])),
+    tran_state = sprintf("transit_%d", 1:(dim(Q)[3]))
+  )
+
+  # name emission probability array
+  dimnames(pEmit) <- list(
+    SNP = 1:(dim(pEmit)[1]),
+    obs_state = sprintf("obs_%d", 1:(dim(pEmit)[2])),
+    latent_state = sprintf("latent_%d", 1:(dim(pEmit)[3]))
+  )
+
+  # return the final results
+  return(list(
+    Q = Q,
+    pEmit = pEmit,
+    pInit = setNames(pInit, sprintf("state_%d", 1:length(pInit)))
+  ))
+}
