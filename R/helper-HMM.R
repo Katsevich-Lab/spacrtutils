@@ -278,6 +278,12 @@ name_output <- function(Q, pEmit, pInit){
 }
 
 
+#' Compute the conditional probability in a more efficient manner
+#'
+#' @inheritParams compute_conditional_prob
+#'
+#' @return A matrix of dimension p-by-M
+#' @export
 compute_conditional_prob_efficient <- function(x, pInit, pEmit, Q){
 
   # compute the total number of x
