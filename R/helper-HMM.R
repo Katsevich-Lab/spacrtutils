@@ -140,11 +140,12 @@ compute_conditional_prob <- function(x, pInit, pEmit, Q){
 #' @param numit Number of iterations in EM algorithm
 #' @param phased Haplotyp (0, 1) or SNP (0,1,2)
 #' @param seed Seed for random start in fastPhase
+#' @param num_random_start Number of random initializations in EM algorithm
 #'
 #' @return Output NULL if there is no error from fastPhase
 #' @export
 fastPhase_new <- function (fp_path, X_file, out_path = NULL, K = 12, numit = 25,
-                           phased = FALSE, seed = 1)
+                           phased = FALSE, seed = 1, num_random_start = 1)
 {
 
   # regulate/check the inputs
@@ -175,7 +176,7 @@ fastPhase_new <- function (fp_path, X_file, out_path = NULL, K = 12, numit = 25,
   out_path_abs = paste(out_path_dirname, sprintf("%s/", out_path_basename),
                        sep = "/")
   command = fp_path
-  command = paste(command, " -Pp -T1 -K", K, sep = "")
+  command = paste(command, sprintf(" -Pp -T%d -K", num_random_start), K, sep = "")
   command = paste(command, " -M1 -g -H-4 -C", numit, sep = "")
   if (phased) {
     command = paste(command, " -B", sep = "")

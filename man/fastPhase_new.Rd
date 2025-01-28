@@ -11,7 +11,8 @@ fastPhase_new(
   K = 12,
   numit = 25,
   phased = FALSE,
-  seed = 1
+  seed = 1,
+  num_random_start = 1
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ fastPhase_new(
 \item{phased}{Haplotyp (0, 1) or SNP (0,1,2)}
 
 \item{seed}{Seed for random start in fastPhase}
+
+\item{num_random_start}{Number of random initializations in EM algorithm}
 }
 \value{
 Output NULL if there is no error from fastPhase
