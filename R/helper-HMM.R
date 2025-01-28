@@ -112,23 +112,23 @@ compute_conditional_prob <- function(x, pInit, pEmit, Q){
   conditional_prob <- sapply(1:num_snp, function(SNP_id){
 
     # compute the emission prob for jth SNP
-    emission_prob <- pEmit[SNP_id, sprintf("obs_%d", x[SNP_id] + 1), ]
+    emission_prob <- pEmit[SNP_id, , ]
 
     # extract the row id for forward and backward probability
     row_id <- sprintf("SNP_%d", SNP_id)
 
     # compute the numerator of the conditional prob
-    numerator <- sum(forward_mat[row_id, ] * emission_prob * backward_mat[row_id, ])
+    numerator <- t(emission_prob) *  (forward_mat[row_id, ] * backward_mat[row_id, ])
 
     # compute the denominator of the conditional prob
     denominator <- sum(forward_mat[row_id, ] * backward_mat[row_id, ])
 
     # return the final prob
-    return(numerator / denominator)
+    return(colSums(numerator) / denominator)
   })
 
   # return the conditional probability vector
-  return(conditional_prob)
+  return(t(conditional_prob))
 }
 
 #' Compile fastPhase from R
@@ -208,7 +208,7 @@ help_dgp <- function(K, M, p,
                      initial_prob = rep(1 / K, K)){
 
   # initial state distribution
-  pInit <- setNames(initial_prob, sprintf("state_%d", 1:K))
+  pInit <- stats::setNames(initial_prob, sprintf("state_%d", 1:K))
 
   # define transition matrix
   transition_mat <- matrix(0, nrow = K, ncol = K)
@@ -273,6 +273,33 @@ name_output <- function(Q, pEmit, pInit){
   return(list(
     Q = Q,
     pEmit = pEmit,
-    pInit = setNames(pInit, sprintf("state_%d", 1:length(pInit)))
+    pInit = stats::setNames(pInit, sprintf("state_%d", 1:length(pInit)))
   ))
+}
+
+
+compute_conditional_prob_efficient <- function(x, pInit, pEmit, Q){
+
+  # compute the total number of x
+  num_snp <- length(x)
+
+  # compute A and B matrix
+  forward_mat <- compute_forward_prob(x = x, pInit = pInit, pEmit = pEmit, Q = Q)
+  backward_mat <- compute_backward_prob(x = x, pInit = pInit, pEmit = pEmit, Q = Q)
+
+  # transform forward_mat and backward_mat to arrays
+  forward_array <- aperm(array(forward_mat,
+                               c(nrow(forward_mat),
+                                 ncol(forward_mat), dim(pEmit)[2])), c(1, 3, 2))
+  backward_array <- aperm(array(backward_mat,
+                                c(nrow(backward_mat),
+                                  ncol(backward_mat), dim(pEmit)[2])), c(1, 3, 2))
+
+  # compute the final probability array
+  numerator_array <- forward_array * backward_array * pEmit
+  denominator_mat <- forward_mat * backward_mat
+  conditional_prob <- apply(numerator_array, c(1, 2), sum) / apply(denominator_mat, 1, sum)
+
+  # return the conditional probability vector
+  return(conditional_prob)
 }
