@@ -4,7 +4,14 @@
 \alias{compute_all_means}
 \title{Compute all conditional means for Y|X_{-j}}
 \usage{
-compute_all_means(fitted_model, x, conditional_prob, support_x, lambda = "min")
+compute_all_means(
+  fitted_model,
+  x,
+  conditional_prob,
+  support_x,
+  lambda = "min",
+  post_lasso = FALSE
+)
 }
 \arguments{
 \item{fitted_model}{Fitted regression model}
@@ -16,6 +23,9 @@ compute_all_means(fitted_model, x, conditional_prob, support_x, lambda = "min")
 \item{support_x}{Support set of X}
 
 \item{lambda}{Lambda regularization choice in cv.glmnet}
+
+\item{post_lasso}{A logical value. If TRUE, post_lasso should be used and the
+\code{fitted_model} should be a low-dimensional GLM}
 }
 \value{
 Conditional probability vector E(Y|X_{-j} = x_{-j})
