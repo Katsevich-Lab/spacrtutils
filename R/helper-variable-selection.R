@@ -28,10 +28,18 @@ compute_all_means <- function(fitted_model, x, conditional_prob, support_x, lamb
       # obtain the fitted model on (x_1,..,x_{j-1}, \{0,\ldots,M\},x_{j+1},...,x_p)
       diag(x_impute) <- s
 
-      # use predict function to obtain the leave-one-out fitted values
-      stats::predict(fitted_model$model,
-                     newdata = data.frame(x_impute)[, sort(fitted_model$act_set)],
-                     type = "response")
+      # separate the case when act_set is NULL
+      if(is.null(fitted_model$act_set)){
+        # use just intercept term
+        stats::predict(fitted_model$model,
+                       newdata = data.frame(rep(1, nrow(x_impute))),
+                       type = "response")
+      }else{
+        # use predict function to obtain the leave-one-out fitted values
+        stats::predict(fitted_model$model,
+                       newdata = data.frame(x_impute)[, sort(fitted_model$act_set), drop = FALSE],
+                       type = "response")
+      }
 
     })
 
@@ -91,9 +99,14 @@ post_lasso <- function(X, Y, family = "binomial",
     fitted_model[[lambda_param]]$act_set <- act_set
 
     # perform the glm.fit
-    X_act <- X[, sort(act_set)]
-    glm_fitted <- stats::glm(Y ~ ., data = data.frame(Y, X_act),
-                             family = family)
+    if(is.null(act_set)){
+      glm_fitted <- stats::glm(Y ~ 1, data = data.frame(Y),
+                               family = family)
+    }else{
+      X_act <- X[, sort(act_set)]
+      glm_fitted <- stats::glm(Y ~ ., data = data.frame(Y, X_act),
+                               family = family)
+    }
 
     # extract the fitted model
     fitted_model[[lambda_param]]$model <- glm_fitted
