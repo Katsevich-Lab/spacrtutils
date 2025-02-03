@@ -103,7 +103,7 @@ post_lasso <- function(X, Y, family = "binomial",
       glm_fitted <- stats::glm(Y ~ 1, data = data.frame(Y),
                                family = family)
     }else{
-      X_act <- X[, sort(act_set)]
+      X_act <- X[, sort(act_set), drop = FALSE]
       glm_fitted <- stats::glm(Y ~ ., data = data.frame(Y, X_act),
                                family = family)
     }
