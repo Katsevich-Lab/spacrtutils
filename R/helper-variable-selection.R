@@ -29,7 +29,7 @@ compute_all_means <- function(fitted_model, x, conditional_prob, support_x, lamb
       diag(x_impute) <- s
 
       # separate the case when act_set is NULL
-      if(is.null(fitted_model$act_set)){
+      if(length(fitted_model$act_set) == 0){
         # use just intercept term
         stats::predict(fitted_model$model,
                        newdata = data.frame(rep(1, nrow(x_impute))),
@@ -99,7 +99,7 @@ post_lasso <- function(X, Y, family = "binomial",
     fitted_model[[lambda_param]]$act_set <- act_set
 
     # perform the glm.fit
-    if(is.null(act_set)){
+    if(length(act_set) == 0){
       glm_fitted <- stats::glm(Y ~ 1, data = data.frame(Y),
                                family = family)
     }else{
