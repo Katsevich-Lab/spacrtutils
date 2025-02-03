@@ -17,11 +17,7 @@ compute_all_means <- function(fitted_model, x, conditional_prob, support_x, lamb
   p <- length(x)
 
   # obtain a square matrix
-  x_impute <- matrix(rep(x, p), nrow = p, ncol = p, byrow = TRUE,
-                     dimnames = list(
-                       sample = 1:p,
-                       predictor = 1:p
-                     ))
+  x_impute <- matrix(rep(x, p), nrow = p, ncol = p, byrow = TRUE)
 
   # separate the analysis for different post_lasso parameters
   if(post_lasso){
@@ -34,7 +30,7 @@ compute_all_means <- function(fitted_model, x, conditional_prob, support_x, lamb
 
       # use predict function to obtain the leave-one-out fitted values
       stats::predict(fitted_model$model,
-                     newx = x_impute[, sort(fitted_model$act_coef)],
+                     newdata = data.frame(x_impute)[, sort(fitted_model$act_set)],
                      type = "response")
 
     })
@@ -55,7 +51,7 @@ compute_all_means <- function(fitted_model, x, conditional_prob, support_x, lamb
   }
 
   # compute the
-  integrate_one_fitted <- rowSums(fix_one_fitted * conditional_prob)
+  integrate_one_fitted <- rowSums(as.matrix(fix_one_fitted) * conditional_prob)
 
   # return the output
   return(integrate_one_fitted)
@@ -75,7 +71,7 @@ post_lasso <- function(X, Y, family = "binomial",
                        lambda_param_vec = c("lambda.min", "lambda.1se")){
 
   # fit Y on X using lasso
-  lasso_model <- glmnet::glmnet(x = X, y = Y, family = family)
+  lasso_model <- glmnet::cv.glmnet(x = X, y = Y, family = family)
 
   # transform the data to data frame
   dimnames(X) <- list(
@@ -92,10 +88,12 @@ post_lasso <- function(X, Y, family = "binomial",
 
     # extract the non-zero coefficient
     act_set <- which(as.vector(stats::coef(lasso_model, s = lambda_param))[-1] != 0)
-    fitted_mode[[lambda_param]]$act_set <- act_set
+    fitted_model[[lambda_param]]$act_set <- act_set
 
     # perform the glm.fit
-    glm_fitted <- stats::glm.fit(x = X[, sort(act_set)], y = Y, family = get(family))
+    X_act <- X[, sort(act_set)]
+    glm_fitted <- stats::glm(Y ~ ., data = data.frame(Y, X_act),
+                             family = family)
 
     # extract the fitted model
     fitted_model[[lambda_param]]$model <- glm_fitted
