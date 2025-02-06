@@ -200,25 +200,21 @@ fastPhase_new <- function (fp_path, X_file, out_path = NULL, K = 12, numit = 25,
 #' @param gamma Emission probability for X being 0
 #' @param stay_prob Stay probability for the Markov jump process
 #' @param initial_prob Initial probability vector
+#' @param alpha Shape1 parameter in beta prior
+#' @param beta Shape2 parameter in beta prior
+#' @param beta_prior A logical value. If TRUE, beta distribution will be used to generate emission probability
 #'
 #' @return List including final pEmit, Q and pInit
 #' @export
 help_dgp <- function(K, M, p,
-                     gamma,
+                     gamma = 0.5,
                      stay_prob,
-                     initial_prob = rep(1 / K, K)){
+                     initial_prob = rep(1 / K, K),
+                     alpha = NULL, beta = NULL,
+                     beta_prior = FALSE){
 
   # initial state distribution
   pInit <- stats::setNames(initial_prob, sprintf("state_%d", 1:K))
-
-  # define transition matrix
-  transition_mat <- matrix(0, nrow = K, ncol = K)
-  diag(transition_mat) <- stay_prob
-  transition_mat[cbind(1:K, (1:K) %% K + 1)] <- 1 - stay_prob
-
-  # create emission distribution
-  emission_mat <- matrix(1 / M, nrow = M, ncol = K)
-  emission_mat[, 2 : K] <- c(gamma, rep((1 - gamma) / (M - 1), M - 1))
 
   # Create an array for storing transition and emission distributions
   Q <- array(0, dim = c(p - 1, K, K),
@@ -234,11 +230,38 @@ help_dgp <- function(K, M, p,
                    latent_state = sprintf("latent_%d", 1:K)
                  ))
 
-  # construct array for emission and transition probabilities
-  for (SNP in 1:p) {
-    pEmit[SNP,,] <- emission_mat
-    if(SNP != p){
-      Q[SNP,,] <- transition_mat
+  # define transition matrix
+  transition_mat <- matrix(0, nrow = K, ncol = K)
+  diag(transition_mat) <- stay_prob
+  transition_mat[cbind(1:K, (1:K) %% K + 1)] <- 1 - stay_prob
+  transition_mat[K, ] <- c(numeric(K - 1), 1)
+
+  # divide the case to if beta_prior is used or not
+  if(beta_prior){
+
+    # construct array for emission and transition probabilities
+    for (SNP in 1:p) {
+      # sample from beta distribution
+      emission_prob <- rbeta(n = K, shape1 = alpha, shape2 = beta)
+      pEmit[SNP,,] <- matrix(c(1 - emission_prob, emission_prob),
+                             ncol = K, nrow = M, byrow = TRUE)
+      if(SNP != p){
+        Q[SNP,,] <- transition_mat
+      }
+    }
+
+  }else{
+
+    # create emission distribution
+    emission_mat <- matrix(1 / M, nrow = M, ncol = K)
+    emission_mat[, 2 : K] <- c(gamma, rep((1 - gamma) / (M - 1), M - 1))
+
+    # construct array for emission and transition probabilities
+    for (SNP in 1:p) {
+      pEmit[SNP,,] <- emission_mat
+      if(SNP != p){
+        Q[SNP,,] <- transition_mat
+      }
     }
   }
 

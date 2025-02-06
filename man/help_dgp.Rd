@@ -4,7 +4,17 @@
 \alias{help_dgp}
 \title{Generate emission, transition and initial probabilites}
 \usage{
-help_dgp(K, M, p, gamma, stay_prob, initial_prob = rep(1/K, K))
+help_dgp(
+  K,
+  M,
+  p,
+  gamma = 0.5,
+  stay_prob,
+  initial_prob = rep(1/K, K),
+  alpha = NULL,
+  beta = NULL,
+  beta_prior = FALSE
+)
 }
 \arguments{
 \item{K}{Number of latent states}
@@ -18,6 +28,12 @@ help_dgp(K, M, p, gamma, stay_prob, initial_prob = rep(1/K, K))
 \item{stay_prob}{Stay probability for the Markov jump process}
 
 \item{initial_prob}{Initial probability vector}
+
+\item{alpha}{Shape1 parameter in beta prior}
+
+\item{beta}{Shape2 parameter in beta prior}
+
+\item{beta_prior}{A logical value. If TRUE, beta distribution will be used to generate emission probability}
 }
 \value{
 List including final pEmit, Q and pInit
