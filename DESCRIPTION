@@ -13,9 +13,12 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     stats,
-    MASS
+    MASS,
+    Rcpp
 Suggests:
     sceptre,
     statmod,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+LinkingTo: 
+    Rcpp

@@ -333,3 +333,84 @@ compute_conditional_prob_efficient <- function(x, pInit, pEmit, Q){
   # return the conditional probability vector
   return(conditional_prob)
 }
+
+
+#' Rcpp implementation of forward prob matrix computation
+#'
+#' @inheritParams compute_forward_prob
+#'
+#' @return Matrix of dimension p-by-M
+#' @export
+compute_forward_prob_Rcpp <- function(x, pInit, pEmit, Q) {
+
+  # dimension checks, etc.:
+  p <- length(x)
+
+  # Suppose pEmit is array of dimension [p, M, K]
+  dims_pEmit <- dim(pEmit)
+  M <- dims_pEmit[2]
+  K <- dims_pEmit[3]
+
+  # Convert pEmit, Q to numeric vectors for Rcpp:
+  pEmit_vec <- as.numeric(pEmit)
+  Q_vec <- as.numeric(Q)
+
+  # compute the matrix in cpp
+  compute_forward_prob_cpp(x, pInit, pEmit_vec, Q_vec, p, M, K)
+}
+
+#' Rcpp implementation of backward prob matrix computation
+#'
+#' @inheritParams compute_backward_prob
+#'
+#' @return Matrix of dimension p-by-M
+#' @export
+compute_backward_prob_Rcpp <- function(x, pInit, pEmit, Q) {
+
+  # dimension checks, etc.:
+  p <- length(x)
+
+  # Suppose pEmit is array of dimension [p, M, K]
+  dims_pEmit <- dim(pEmit)
+  M <- dims_pEmit[2]
+  K <- dims_pEmit[3]
+
+  # Convert pEmit, Q to numeric vectors for Rcpp:
+  pEmit_vec <- as.numeric(pEmit)
+  Q_vec <- as.numeric(Q)
+
+  # compute the matrix in cpp
+  compute_backward_prob_cpp(x, pInit, pEmit_vec, Q_vec, p, M, K)
+}
+
+#' Compute the conditional probability in a more efficient manner
+#'
+#' @inheritParams compute_forward_prob
+#'
+#' @return A matrix of dimension p-by-M
+#' @export
+compute_conditional_prob_Rcpp <- function(x, pInit, pEmit, Q){
+
+  # compute the total number of x
+  num_snp <- length(x)
+
+  # compute A and B matrix
+  forward_mat <- compute_forward_prob_Rcpp(x = x, pInit = pInit, pEmit = pEmit, Q = Q)
+  backward_mat <- compute_backward_prob_Rcpp(x = x, pInit = pInit, pEmit = pEmit, Q = Q)
+
+  # transform forward_mat and backward_mat to arrays
+  forward_array <- aperm(array(forward_mat,
+                               c(nrow(forward_mat),
+                                 ncol(forward_mat), dim(pEmit)[2])), c(1, 3, 2))
+  backward_array <- aperm(array(backward_mat,
+                                c(nrow(backward_mat),
+                                  ncol(backward_mat), dim(pEmit)[2])), c(1, 3, 2))
+
+  # compute the final probability array
+  numerator_array <- forward_array * backward_array * pEmit
+  denominator_mat <- forward_mat * backward_mat
+  conditional_prob <- apply(numerator_array, c(1, 2), sum) / apply(denominator_mat, 1, sum)
+
+  # return the conditional probability vector
+  return(conditional_prob)
+}
