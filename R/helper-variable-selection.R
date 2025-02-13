@@ -90,28 +90,32 @@ compute_all_means_efficient <- function(fitted_model, X, conditional_prob_mat,
                                                                   s = sprintf("lambda.%s", lambda),
                                                                   newx = X, type = "response")
 
-  # loop over the act_set
-  integrate_one_fitted <- sapply(act_set, function(act_beta){
+  # separate the case when act_set is of length zero or not
+  if (length(act_set) > 0){
 
-    # compute the all the conditional expectations Y|X_{-j} for j in act_set
-    fix_one_fitted <- sapply(sort(support_x), function(s){
+    # loop over the act_set
+    integrate_one_fitted <- sapply(act_set, function(act_beta){
 
-      # impute the X to be the value in support_x
-      x_impute <- X
-      x_impute[, act_beta] <- s
+      # compute the all the conditional expectations Y|X_{-j} for j in act_set
+      fix_one_fitted <- sapply(sort(support_x), function(s){
 
-      # use predict function to obtain the leave-one-out fitted values
-      stats::predict(fitted_model, newx = x_impute, s = sprintf("lambda.%s", lambda),
-                     type = "response")
+        # impute the X to be the value in support_x
+        x_impute <- X
+        x_impute[, act_beta] <- s
 
+        # use predict function to obtain the leave-one-out fitted values
+        stats::predict(fitted_model, newx = x_impute, s = sprintf("lambda.%s", lambda),
+                       type = "response")
+
+      })
+
+      # compute the integrated prediction
+      rowSums(fix_one_fitted * conditional_prob_mat[, act_beta + p * (0 : (length(support_x) - 1))])
     })
 
-    # compute the integrated prediction
-    rowSums(fix_one_fitted * conditional_prob_mat[, act_beta + p * (0 : (length(support_x) - 1))])
-  })
-
-  # finish the imputation
-  predicted_mat[, act_set] <- integrate_one_fitted
+    # finish the imputation
+    predicted_mat[, act_set] <- integrate_one_fitted
+  }
 
   # return the output
   return(predicted_mat)
