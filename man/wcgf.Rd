@@ -2,7 +2,8 @@
 % Please edit documentation in R/method_helpers.R
 \name{wcgf}
 \alias{wcgf}
-\title{method helpers will go here (e.g. solving saddlepoint equations)}
+\title{\code{wcgf} is a function computing the cumulant generating function (CGF) of
+distributions, multiplied by a weight function, from the GLM family}
 \usage{
 wcgf(s, P, W, fam)
 }

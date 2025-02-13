@@ -2,7 +2,8 @@
 % Please edit documentation in R/method_helpers.R
 \name{dCRT_dist}
 \alias{dCRT_dist}
-\title{method helpers will go here (e.g. solving saddlepoint equations)}
+\title{\code{dCRT_dist} is a function that returns simulated data from an appropriate
+distribution depending on a specified  GLM family}
 \usage{
 dCRT_dist(n, fitted.val, fam)
 }

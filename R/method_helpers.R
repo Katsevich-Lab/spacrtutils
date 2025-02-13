@@ -1,16 +1,17 @@
 #####################################################################################
-#' \code{spa.cdf} SPA to CDF of T_n = S_n / sqrt(n)
+#' \code{spa_cdf} SPA to CDF of T_n = S_n / sqrt(n)
 #'
-#' @param n The point where the CGF will be computed.
+#' @param t The point where the CGF will be computed.
+#' @param P <- X_on_Z_fit$fitted.values
+#' @param W <- Y - Y_on_Z_fit$fitted.values
 #' @param fam The GLM family which includes the distribution whose CGF is being
 #' evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
-#' @param W <- Y - Y_on_Z_fit$fitted.values
-#' @param P <- X_on_Z_fit$fitted.values
-
+#' @param R stats::uniroot() search space endpoint
+#' @param max_expansions Maximum number of times stats::uniroot() search space shuold be broadened
 #' @return Simulated data from an appropriate distribution.
 #'
 #' @examples
-#' n <- 20; p <- 2; normalize <- FALSE; return_cdf <- FALSE
+#' n <- 100; p <- 2; normalize <- FALSE; return_cdf <- FALSE
 #' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
 #'              Y = rpois(n = n, lambda = 1),
 #'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
@@ -21,10 +22,10 @@
 #' P <- X_on_Z_fit$fitted.values
 #' prod_resids <- (X - X_on_Z_fit$fitted.values) * W
 #' test_stat <- 1/sqrt(n) * sum(prod_resids)
-#' spa.cdf(t = test_stat + sum(P*W)/sqrt(n), P = P, W = W, fam = X_on_Z_fam, R = 10)
+#' spa_cdf(t = test_stat + sum(P*W)/sqrt(n), P = P, W = W, fam = "binomial", R = 1000)
 #'
 #' @export
-spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R, max_expansions = 10){
+spa_cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R, max_expansions = 10){
   n <- length(P)
 
   # temp.gcm <- "NO"
@@ -34,11 +35,11 @@ spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R, max_expansions = 10){
 
   for (i in seq_len(max_expansions)) {
     tryCatch({
-      s.hat <- uniroot(
-        f = function(s) spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t,
+      s.hat <- stats::uniroot(
+        f = function(s) d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t,
         lower = current_lower, upper = current_upper, tol = .Machine$double.eps)$root
 
-      success_uniroot <<- TRUE
+      success_uniroot <- TRUE
       break
     }, error = function(e) {
                   message(sprintf("Attempt %d failed, expanding interval...", i))

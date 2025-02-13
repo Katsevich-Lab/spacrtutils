@@ -39,7 +39,7 @@ Here, cdf is a function that takes in a value t and returns the
 saddlepoint approximation to the CDF of the resampling distribution of the
 test statistic evaluated at t. This function is returned only if
 return_cdf == TRUE.
-gcm.default returns TRUE if spacrt::GCM was employed due to the failure of spaCRT.
+gcm.default returns TRUE if GCM was employed due to the failure of spaCRT.
 }
 \description{
 \code{spaCRT} is a function carrying out the saddlepoint approximation to the
