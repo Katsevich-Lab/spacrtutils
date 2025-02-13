@@ -201,7 +201,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
 
   # fit Y on Z regression
   if(Y_on_Z_fam == "negative.binomial"){
-    aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
+    aux_info_Y_on_Z <- nb_precomp(list(Y = Y, Z = Z))
 
     Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                                               family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
@@ -221,58 +221,14 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
   # compute the test statistic
   test_stat <- 1/sqrt(n) * sum(prod_resids)
 
-  ##### SPA to CDF of T_n = S_n / sqrt(n)
-  spa.cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R){
-    n <- length(P)
-
-    temp.gcm <- "NO"
-
-    if(tryCatch(s.hat <- stats::uniroot(function(s){
-      spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-      lower = -R, upper = R, tol = .Machine$double.eps)$root,
-      error = function(e) FALSE) == FALSE){
-
-      if(tryCatch(s.hat <- stats::uniroot(function(s){
-        spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-        lower = -10*R, upper = 10*R, tol = .Machine$double.eps)$root,
-        error = function(e) FALSE) == FALSE){
-
-        if(tryCatch(s.hat <- stats::uniroot(function(s){
-          spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-          lower = -100*R, upper = 100*R, tol = .Machine$double.eps)$root,
-          error = function(e) FALSE) == FALSE){
-
-          if(tryCatch(s.hat <- stats::uniroot(function(s){
-            spacrt::d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t},
-            lower = -1000*R, upper = 1000*R, tol = .Machine$double.eps)$root,
-            error = function(e) FALSE) == FALSE){
-
-              temp.gcm <- "YES"
-          }
-        }
-      }
-    }
-
-    if(temp.gcm == "NO"){
-      r.hat <- sign(s.hat) * sqrt(2 * (n*s.hat*t/sqrt(n) -
-                                         spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
-
-      F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
-        (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
-
-      return(F.hat)
-    }else{
-      return(NaN)
-    }
-  }
-
   # perform saddlepoint approximation
-  p_value_opp <- suppressWarnings(spa.cdf(test_stat + 1/sqrt(n) * sum(P*W),
+  p_value_opp <- suppressWarnings(spa.cdf(t = test_stat + 1/sqrt(n) * sum(P*W),
                                           P = P, W = W,
                                           fam = X_on_Z_fam,
-                                          R = abs(R)))
+                                          R = abs(R),
+                                          max_expansions = 6))
 
-  if(is.nan(p_value_opp) == TRUE){
+  if(is.nan(p_value_opp) == TRUE | p_value_opp < 0 | p_value_opp > 1){
     temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
 
     # return test statistic, GCM p-values, and related quantities
@@ -281,34 +237,18 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
                 p.right = temp.gcm$p.right,
                 p.both = temp.gcm$p.both,
                 NB.disp.param = NB.disp.param,
-                # cdf = NULL,
                 gcm.default = TRUE,
                 nan.spacrt = is.nan(p_value_opp)))
   }else{
-    if(p_value_opp < 0 | p_value_opp > 1){
-      temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
-
-      # return test statistic, GCM p-values, and related quantities
-      return(list(test_stat = temp.gcm$test_stat,
-                  p.left = temp.gcm$p.left,
-                  p.right = temp.gcm$p.right,
-                  p.both = temp.gcm$p.both,
-                  NB.disp.param = NB.disp.param,
-                  # cdf = NULL,
-                  gcm.default = TRUE,
-                  nan.spacrt = is.nan(p_value_opp)))
-    }else{
       # return test statistic, spaCRT p-values, and related quantities
       return(list(test_stat = test_stat,
                   p.left = p_value_opp,
                   p.right = 1 - p_value_opp,
                   p.both = 2*min(c(p_value_opp, 1 - p_value_opp)),
                   NB.disp.param = NB.disp.param,
-                  # cdf = spa.cdf,
                   gcm.default = FALSE,
                   nan.spacrt = is.nan(p_value_opp)))
     }
-  }
 }
 
 
