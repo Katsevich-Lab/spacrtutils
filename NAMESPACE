@@ -2,6 +2,7 @@
 
 export(GCM)
 export(compute_all_means)
+export(compute_all_means_efficient)
 export(compute_backward_prob)
 export(compute_backward_prob_Rcpp)
 export(compute_conditional_prob)

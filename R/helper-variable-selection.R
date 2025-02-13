@@ -66,6 +66,58 @@ compute_all_means <- function(fitted_model, x, conditional_prob, support_x, lamb
 }
 
 
+#' Compute the conditional mean using power trick (efficient version)
+#'
+#' @inheritParams compute_all_means
+#' @param X data matrix of dim n-by-p
+#' @param conditional_prob_mat Conditional probability matrix of dim n-by-(p*M) and M is the size of support_x
+#'
+#' @return Matrix of dim n-by-p
+#' @export
+compute_all_means_efficient <- function(fitted_model, X, conditional_prob_mat,
+                                        support_x, lambda = "min"){
+
+  # extract the dimension of the problem
+  p <- ncol(X)
+  n <- nrow(X)
+
+  # predicted matrix to be imputed
+  predicted_mat <- matrix(0, nrow = n, ncol = p)
+
+  # extract the nonzero component in the model
+  act_set <- sort(which(as.vector(stats::coef(fitted_model, s = sprintf("lambda.%s", lambda)))[-1] != 0))
+  predicted_mat[, dplyr::setdiff(1:p, act_set)] <- stats::predict(fitted_model,
+                                                                  s = sprintf("lambda.%s", lambda),
+                                                                  newx = X, type = "response")
+
+  # loop over the act_set
+  integrate_one_fitted <- sapply(act_set, function(act_beta){
+
+    # compute the all the conditional expectations Y|X_{-j} for j in act_set
+    fix_one_fitted <- sapply(sort(support_x), function(s){
+
+      # impute the X to be the value in support_x
+      x_impute <- X
+      x_impute[, act_beta] <- s
+
+      # use predict function to obtain the leave-one-out fitted values
+      stats::predict(fitted_model, newx = x_impute, s = sprintf("lambda.%s", lambda),
+                     type = "response")
+
+    })
+
+    # compute the integrated prediction
+    rowSums(fix_one_fitted * conditional_prob_mat[, act_beta + p * (0 : (length(support_x) - 1))])
+  })
+
+  # finish the imputation
+  predicted_mat[, act_set] <- integrate_one_fitted
+
+  # return the output
+  return(predicted_mat)
+}
+
+
 #' This is a post-lasso fitting function
 #'
 #' @param X A matrix including n rows and p columns
