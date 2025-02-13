@@ -36,7 +36,7 @@ GCM <- function(data, X_on_Z_fam, Y_on_Z_fam) {
 
   # fit Y on Z regression
   if(Y_on_Z_fam == "negative.binomial"){
-    aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
+    aux_info_Y_on_Z <- nb_precomp(list(Y = Y, Z = Z))
 
     Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                         family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
@@ -109,7 +109,7 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
 
   # fit Y on Z regression
   if(Y_on_Z_fam == "negative.binomial"){
-    aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
+    aux_info_Y_on_Z <- nb_precomp(list(Y = Y, Z = Z))
 
     Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                                       family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
@@ -129,7 +129,7 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
 
   for(b in 1:B){
     # resampling X from X|Z
-    resamp_X <- spacrt::dCRT_dist(n = n, fitted.val = X_on_Z_fit$fitted.values,
+    resamp_X <- dCRT_dist(n = n, fitted.val = X_on_Z_fit$fitted.values,
                                   fam = X_on_Z_fam)
 
     # compute the products of residuals for each resampled observation
@@ -186,7 +186,7 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' saddlepoint approximation to the CDF of the resampling distribution of the
 #' test statistic evaluated at t. This function is returned only if
 #' return_cdf == TRUE.
-#' gcm.default returns TRUE if spacrt::GCM was employed due to the failure of spaCRT.
+#' gcm.default returns TRUE if GCM was employed due to the failure of spaCRT.
 #'
 #' @export
 spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
@@ -229,7 +229,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
                                           max_expansions = 6))
 
   if(is.nan(p_value_opp) == TRUE | p_value_opp < 0 | p_value_opp > 1){
-    temp.gcm <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam)
+    temp.gcm <- GCM(data, X_on_Z_fam, Y_on_Z_fam)
 
     # return test statistic, GCM p-values, and related quantities
     return(list(test_stat = temp.gcm$test_stat,
@@ -298,7 +298,7 @@ score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
       list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
     },
     error = function(e) {
-      aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
+      aux_info_Y_on_Z <- nb_precomp(list(Y = Y, Z = Z))
 
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                               family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
@@ -308,7 +308,7 @@ score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
       list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
     })
   }else if(Y_on_Z_fam == 'poisson'){
-    aux_info_Y_on_Z <- spacrt::nb_precomp(list(Y = Y, Z = Z))
+    aux_info_Y_on_Z <- nb_precomp(list(Y = Y, Z = Z))
 
     Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                                               family = stats::poisson(),
