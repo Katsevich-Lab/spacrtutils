@@ -230,7 +230,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
                                       max_expansions = 10,
                                       prod_resids = prod_resids))
 
-  return(append(res, list(NB.disp.param = NB.disp.param)))
+  return(res |> append(list(NB.disp.param = NB.disp.param), after = 4))
 }
 
 
