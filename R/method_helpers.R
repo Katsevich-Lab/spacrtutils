@@ -2,8 +2,8 @@
 #' \code{spa_cdf} SPA to CDF of T_n = S_n / sqrt(n)
 #'
 #' @param t The point where the CGF will be computed.
-#' @param P <- X_on_Z_fit$fitted.values
-#' @param W <- Y - Y_on_Z_fit$fitted.values
+#' @param P X_on_Z_fit$fitted.values
+#' @param W Y - Y_on_Z_fit$fitted.values
 #' @param fam The GLM family which includes the distribution whose CGF is being
 #' evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 #' @param R stats::uniroot() search space endpoint
@@ -25,7 +25,7 @@
 #' spa_cdf(t = test_stat + sum(P*W)/sqrt(n), P = P, W = W, fam = "binomial", R = 1000)
 #'
 #' @export
-spa_cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R, max_expansions = 10){
+spa_cdf <- function(t, P, W, fam, R, max_expansions = 10){
   n <- length(P)
 
   # temp.gcm <- "NO"
@@ -35,18 +35,18 @@ spa_cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R, max_expansions = 10){
 
   for (i in seq_len(max_expansions)) {
     tryCatch({
-      s.hat <- stats::uniroot(
-        f = function(s) d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t,
-        lower = current_lower, upper = current_upper, tol = .Machine$double.eps)$root
+        s.hat <- stats::uniroot(
+          f = function(s) d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t,
+          lower = current_lower, upper = current_upper, tol = .Machine$double.eps)$root
 
-      success_uniroot <- TRUE
-      break
-    }, error = function(e) {
-                  message(sprintf("Attempt %d failed, expanding interval...", i))
-                  expansion_factor <- ifelse(i <= max_expansions/2, 2, 10)
-                  current_lower <<- current_lower * expansion_factor
-                  current_upper <<- current_upper * expansion_factor
-                }
+        success_uniroot <- TRUE
+        break
+      }, error = function(e) {
+                    message(sprintf("Attempt %d failed, expanding interval...", i))
+                    expansion_factor <- ifelse(i <= max_expansions/2, 2, 10)
+                    current_lower <<- current_lower * expansion_factor
+                    current_upper <<- current_upper * expansion_factor
+                  }
     )
 
     if(success_uniroot == TRUE) break
@@ -63,6 +63,87 @@ spa_cdf <- function(t, P = P, W = W, fam = X_on_Z_fam, R, max_expansions = 10){
   }else{
     return(NaN)
   }
+}
+
+
+#####################################################################################
+#' \code{spa_cdf_2} SPA to CDF of T_n = S_n / sqrt(n)
+#'
+#' @param t The point where the CGF will be computed.
+#' @param P X_on_Z_fit$fitted.values
+#' @param W Y - Y_on_Z_fit$fitted.values
+#' @param fam The GLM family which includes the distribution whose CGF is being
+#' evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' @param R stats::uniroot() search space endpoint
+#' @param max_expansions Maximum number of times stats::uniroot() search space shuold be broadened
+#' @return Simulated data from an appropriate distribution.
+#'
+#' @examples
+#' n <- 100; p <- 2; normalize <- FALSE; return_cdf <- FALSE
+#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
+#'              Y = rpois(n = n, lambda = 1),
+#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+#' X <- data$X; Y <- data$Y; Z <- data$Z
+#' X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = "binomial"))
+#' Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = "poisson"))
+#' W <- Y - Y_on_Z_fit$fitted.values
+#' P <- X_on_Z_fit$fitted.values
+#' prod_resids <- (X - X_on_Z_fit$fitted.values) * W
+#' test_stat <- 1/sqrt(n) * sum(prod_resids)
+#' spa_cdf(t = test_stat + sum(P*W)/sqrt(n), P = P, W = W, fam = "binomial", R = 1000)
+#'
+#' @export
+spa_cdf_new <- function(t_fixed, P, W, fam, R, max_expansions = 10, prod_resids){
+  t <- t_fixed
+  n <- length(P)
+
+  # temp.gcm <- "NO"
+  current_lower <- -abs(R)
+  current_upper <- abs(R)
+  success_uniroot <- FALSE
+
+  for (i in seq_len(max_expansions)) {
+    tryCatch({
+      s.hat <- stats::uniroot(
+        f = function(s) d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t,
+        lower = current_lower, upper = current_upper, tol = .Machine$double.eps)$root
+
+      success_uniroot <- TRUE
+      break
+    }, error = function(e) {
+      message(sprintf("Attempt %d failed, expanding interval...", i))
+      expansion_factor <- ifelse(i <= max_expansions/2, 2, 10)
+      current_lower <<- current_lower * expansion_factor
+      current_upper <<- current_upper * expansion_factor
+    }
+    )
+
+    if(success_uniroot == TRUE) break
+  }
+
+  if(success_uniroot == TRUE){
+    r.hat <- sign(s.hat) * sqrt(2 * (sqrt(n )* s.hat * t -
+                                       spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
+
+    F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
+      (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
+
+    res <- list(test_stat = t_fixed - 1/sqrt(n) * sum(P*W),
+                p.left = F.hat,
+                p.right = 1 - F.hat,
+                p.both = 2*min(c(F.hat, 1 - F.hat)),
+                gcm.default = FALSE)
+  }else{
+    test_stat <- 1/sqrt(n)*sum(prod_resids)/stats::sd(prod_resids) * sqrt(n/(n-1))
+
+    res <- list(test_stat = test_stat,
+                p.left = stats::pnorm(test_stat, lower.tail = TRUE),
+                p.right = stats::pnorm(test_stat, lower.tail = FALSE),
+                p.both = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
+                gcm.default = TRUE)
+  }
+
+  return(res)
 }
 
 

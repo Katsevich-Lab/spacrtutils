@@ -222,34 +222,18 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
   test_stat <- 1/sqrt(n) * sum(prod_resids)
 
   # perform saddlepoint approximation
-  p_value_opp <- suppressWarnings(spa_cdf(t = test_stat + 1/sqrt(n) * sum(P*W),
-                                          P = P, W = W,
-                                          fam = X_on_Z_fam,
-                                          R = abs(R),
-                                          max_expansions = 6))
+  res <- suppressWarnings(spa_cdf_new(t_fixed = test_stat + 1/sqrt(n) * sum(P*W),
+                                      P = X_on_Z_fit$fitted.values,
+                                      W = W,
+                                      fam = X_on_Z_fam,
+                                      R = abs(R),
+                                      max_expansions = 10,
+                                      prod_resids = prod_resids))
 
-  if(is.nan(p_value_opp) == TRUE | p_value_opp < 0 | p_value_opp > 1){
-    temp.gcm <- GCM(data, X_on_Z_fam, Y_on_Z_fam)
-
-    # return test statistic, GCM p-values, and related quantities
-    return(list(test_stat = temp.gcm$test_stat,
-                p.left = temp.gcm$p.left,
-                p.right = temp.gcm$p.right,
-                p.both = temp.gcm$p.both,
-                NB.disp.param = NB.disp.param,
-                gcm.default = TRUE,
-                nan.spacrt = is.nan(p_value_opp)))
-  }else{
-      # return test statistic, spaCRT p-values, and related quantities
-      return(list(test_stat = test_stat,
-                  p.left = p_value_opp,
-                  p.right = 1 - p_value_opp,
-                  p.both = 2*min(c(p_value_opp, 1 - p_value_opp)),
-                  NB.disp.param = NB.disp.param,
-                  gcm.default = FALSE,
-                  nan.spacrt = is.nan(p_value_opp)))
-    }
+  return(append(res, list(NB.disp.param = NB.disp.param)))
 }
+
+
 
 
 #####################################################################################
