@@ -121,13 +121,19 @@ spa_cdf_new <- function(t_fixed, P, W, fam, R, max_expansions = 10, prod_resids)
   }
 
   if(success_uniroot == TRUE && {
-      r.hat <- sign(s.hat) * sqrt(2 * (sqrt(n)* s.hat * t -
-                                       spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
+      suppressWarnings({
+        r.hat <- sign(s.hat) * sqrt(2 * (sqrt(n)* s.hat * t -
+                                         spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
 
-      F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
-        (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
-
+        F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
+          (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
+      })
+    # decide if F.hat is NA or beyond the range [0, 1] or not
+    if(is.na(F.hat)){
+      FALSE
+    }else{
       ifelse(F.hat >= 0 && F.hat <= 1, all(TRUE, !is.na(F.hat)), FALSE)
+    }
     }){
     res <- list(test_stat = t_fixed - 1/sqrt(n) * sum(P*W),
                 p.left = F.hat,
