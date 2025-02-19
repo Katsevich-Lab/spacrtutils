@@ -2,7 +2,7 @@
 % Please edit documentation in R/method_helpers.R
 \name{spa_cdf_new}
 \alias{spa_cdf_new}
-\title{\code{spa_cdf_2} SPA to CDF of T_n = S_n / sqrt(n)}
+\title{\code{spa_cdf_new} SPA to CDF of T_n = S_n / sqrt(n)}
 \usage{
 spa_cdf_new(t_fixed, P, W, fam, R, max_expansions = 10, prod_resids)
 }
@@ -24,7 +24,7 @@ evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 Simulated data from an appropriate distribution.
 }
 \description{
-\code{spa_cdf_2} SPA to CDF of T_n = S_n / sqrt(n)
+\code{spa_cdf_new} SPA to CDF of T_n = S_n / sqrt(n)
 }
 \examples{
 n <- 100; p <- 2; normalize <- FALSE; return_cdf <- FALSE

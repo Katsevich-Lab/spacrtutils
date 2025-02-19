@@ -127,7 +127,7 @@ spa_cdf_new <- function(t_fixed, P, W, fam, R, max_expansions = 10, prod_resids)
       F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
         (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
 
-      ifelse(F.hat >= 0 && F.hat <= 1, TRUE, FALSE)
+      ifelse(F.hat >= 0 && F.hat <= 1, all(TRUE, !is.na(F.hat)), FALSE)
     }){
     res <- list(test_stat = t_fixed - 1/sqrt(n) * sum(P*W),
                 p.left = F.hat,
