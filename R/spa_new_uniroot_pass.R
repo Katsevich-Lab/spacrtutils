@@ -12,3 +12,15 @@
 # (results_old <- spaCRT_old(data, X_on_Z_fam, Y_on_Z_fam, normalize))
 # (results_new <- spaCRT(data, X_on_Z_fam, Y_on_Z_fam, normalize))
 # (results_gcm <- GCM(data, X_on_Z_fam, Y_on_Z_fam))
+
+
+if(TRUE && {
+  x <- 5
+  y <- 10
+
+  ifelse(x+y < 3, TRUE, FALSE)
+}){
+  print("hello")
+}else{
+  print("ni hao")
+}
