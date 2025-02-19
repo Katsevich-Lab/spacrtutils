@@ -24,7 +24,3 @@ if(TRUE && {
 }else{
   print("ni hao")
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> 8307ea2c14f741e99609e6fa716c728c3fb61cae
