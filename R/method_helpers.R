@@ -67,7 +67,7 @@ spa_cdf <- function(t, P, W, fam, R, max_expansions = 10){
 
 
 #####################################################################################
-#' \code{spa_cdf_2} SPA to CDF of T_n = S_n / sqrt(n)
+#' \code{spa_cdf_new} SPA to CDF of T_n = S_n / sqrt(n)
 #'
 #' @param t The point where the CGF will be computed.
 #' @param P X_on_Z_fit$fitted.values
@@ -97,7 +97,6 @@ spa_cdf_new <- function(t_fixed, P, W, fam, R, max_expansions = 10, prod_resids)
   t <- t_fixed
   n <- length(P)
 
-  # temp.gcm <- "NO"
   current_lower <- -abs(R)
   current_upper <- abs(R)
   success_uniroot <- FALSE
@@ -121,20 +120,22 @@ spa_cdf_new <- function(t_fixed, P, W, fam, R, max_expansions = 10, prod_resids)
     if(success_uniroot == TRUE) break
   }
 
-  if(success_uniroot == TRUE){
-    r.hat <- sign(s.hat) * sqrt(2 * (sqrt(n )* s.hat * t -
+  if(success_uniroot == TRUE && {
+      r.hat <- sign(s.hat) * sqrt(2 * (sqrt(n)* s.hat * t -
                                        spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
 
-    F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
-      (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
+      F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
+        (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
 
+      ifelse(F.hat >= 0 && F.hat <= 1, TRUE, FALSE)
+    }){
     res <- list(test_stat = t_fixed - 1/sqrt(n) * sum(P*W),
                 p.left = F.hat,
                 p.right = 1 - F.hat,
                 p.both = 2*min(c(F.hat, 1 - F.hat)),
                 gcm.default = FALSE)
   }else{
-    test_stat <- 1/sqrt(n)*sum(prod_resids)/stats::sd(prod_resids) * sqrt(n/(n-1))
+    test_stat <- sum(prod_resids)/(stats::sd(prod_resids) * sqrt(n-1))
 
     res <- list(test_stat = test_stat,
                 p.left = stats::pnorm(test_stat, lower.tail = TRUE),
