@@ -130,7 +130,7 @@ spa_cdf_new <- function(t_fixed, P, W, fam, R, max_expansions = 10, prod_resids)
       })
 
       # decide if F.hat is NA or beyond the range [0, 1] or not
-      all(F.hat >= 0, F.hat <= 1, !is.na(F.hat), !is.nan(F.hat))
+      all(F.hat >= 0, F.hat <= 1, !is.na(F.hat))
     }
     ){
     res <- list(test_stat = t_fixed - 1/sqrt(n) * sum(P*W),
