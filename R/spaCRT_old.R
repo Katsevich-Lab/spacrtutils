@@ -31,11 +31,11 @@ spaCRT_old <- function(data, X_on_Z_fam, Y_on_Z_fam,
   test_stat <- 1/sqrt(n) * sum(prod_resids)
 
   # perform saddlepoint approximation
-  p_value_opp <- suppressWarnings(spa_cdf(t = test_stat + 1/sqrt(n) * sum(P*W),
-                                          P = P, W = W,
-                                          fam = X_on_Z_fam,
-                                          R = abs(R),
-                                          max_expansions = 6))
+  p_value_opp <- suppressWarnings(spa_cdf_old(t = test_stat + 1/sqrt(n) * sum(P*W),
+                                              P = P, W = W,
+                                              fam = X_on_Z_fam,
+                                              R = abs(R),
+                                              max_expansions = 6))
 
   if(is.nan(p_value_opp) == TRUE | p_value_opp < 0 | p_value_opp > 1){
     temp.gcm <- GCM(data, X_on_Z_fam, Y_on_Z_fam)
