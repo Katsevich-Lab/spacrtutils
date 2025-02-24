@@ -4,14 +4,16 @@
 \alias{spa_cdf}
 \title{\code{spa_cdf} SPA to CDF of T_n = S_n / sqrt(n)}
 \usage{
-spa_cdf(t, P, W, fam, R, max_expansions = 10)
+spa_cdf(X, Y, X_on_Z_fit_vals, Y_on_Z_fit_vals, fam, R, max_expansions = 10)
 }
 \arguments{
-\item{t}{The point where the CGF will be computed.}
+\item{X}{The point where the CGF will be computed.}
 
-\item{P}{X_on_Z_fit$fitted.values}
+\item{Y}{The point where the CGF will be computed.}
 
-\item{W}{Y - Y_on_Z_fit$fitted.values}
+\item{X_on_Z_fit_vals}{X_on_Z_fit$fitted.values}
+
+\item{Y_on_Z_fit_vals}{Y_on_Z_fit$fitted.values}
 
 \item{fam}{The GLM family which includes the distribution whose CGF is being
 evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).}
