@@ -1,5 +1,5 @@
 #####################################################################################
-#' \code{spa_cdf} SPA to CDF of T_n = S_n / sqrt(n)
+#' \code{spa_cdf_old} SPA to CDF of T_n = S_n / sqrt(n)
 #'
 #' @param t The point where the CGF will be computed.
 #' @param P X_on_Z_fit$fitted.values
