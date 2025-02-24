@@ -222,13 +222,12 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
   test_stat <- 1/sqrt(n) * sum(prod_resids)
 
   # perform saddlepoint approximation
-  res <- suppressWarnings(spa_cdf_new(t_fixed = test_stat + 1/sqrt(n) * sum(P*W),
-                                      P = X_on_Z_fit$fitted.values,
-                                      W = W,
-                                      fam = X_on_Z_fam,
-                                      R = abs(R),
-                                      max_expansions = 10,
-                                      prod_resids = prod_resids))
+  res <- suppressWarnings(spa_cdf(X = X, Y = Y,
+                                  X_on_Z_fit_vals = X_on_Z_fit$fitted.values,
+                                  Y_on_Z_fit_vals = Y_on_Z_fit$fitted.values,
+                                  fam = X_on_Z_fam,
+                                  R = abs(R),
+                                  max_expansions = 10))
 
   return(res |> append(list(NB.disp.param = NB.disp.param), after = 4))
 }
