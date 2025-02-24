@@ -101,10 +101,10 @@ spa_cdf <- function(X, Y, X_on_Z_fit_vals, Y_on_Z_fit_vals, fam, R, max_expansio
 #' distribution depending on a specified  GLM family
 #'
 #' @param n The point where the CGF will be computed.
-#' @param fam The GLM family which includes the distribution whose CGF is being
-#' evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 #' @param fitted.val A vector containing the fitted parameter values by
 #' fitting a GLM to X on Z.
+#' @param fam The GLM family which includes the distribution whose CGF is being
+#' evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 #' @return Simulated data from an appropriate distribution.
 #'
 #' @examples
