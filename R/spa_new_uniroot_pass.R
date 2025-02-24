@@ -13,7 +13,6 @@
 # (results_new <- spaCRT(data, X_on_Z_fam, Y_on_Z_fam, normalize))
 # (results_gcm <- GCM(data, X_on_Z_fam, Y_on_Z_fam))
 
-
 if(TRUE && {
   x <- 5
   y <- 10
