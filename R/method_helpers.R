@@ -25,7 +25,7 @@
 #' spa_cdf(t = test_stat + sum(P*W)/sqrt(n), P = P, W = W, fam = "binomial", R = 1000)
 #'
 #' @export
-spa_cdf <- function(t, P, W, fam, R, max_expansions = 10){
+spa_cdf_old <- function(t, P, W, fam, R, max_expansions = 10){
   n <- length(P)
 
   # temp.gcm <- "NO"
@@ -56,10 +56,10 @@ spa_cdf <- function(t, P, W, fam, R, max_expansions = 10){
     r.hat <- sign(s.hat) * sqrt(2 * (n * s.hat * t / sqrt(n) -
                                        spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
 
-    F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
+    p.left <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
       (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
 
-    return(F.hat)
+    return(p.left)
   }else{
     return(NaN)
   }
@@ -67,11 +67,12 @@ spa_cdf <- function(t, P, W, fam, R, max_expansions = 10){
 
 
 #####################################################################################
-#' \code{spa_cdf_new} SPA to CDF of T_n = S_n / sqrt(n)
+#' \code{spa_cdf} SPA to CDF of T_n = S_n / sqrt(n)
 #'
-#' @param t The point where the CGF will be computed.
-#' @param P X_on_Z_fit$fitted.values
-#' @param W Y - Y_on_Z_fit$fitted.values
+#' @param X The point where the CGF will be computed.
+#' @param Y The point where the CGF will be computed.
+#' @param X_on_Z_fit_vals X_on_Z_fit$fitted.values
+#' @param Y_on_Z_fit_vals Y_on_Z_fit$fitted.values
 #' @param fam The GLM family which includes the distribution whose CGF is being
 #' evaluated (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 #' @param R stats::uniroot() search space endpoint
@@ -93,9 +94,19 @@ spa_cdf <- function(t, P, W, fam, R, max_expansions = 10){
 #' spa_cdf(t = test_stat + sum(P*W)/sqrt(n), P = P, W = W, fam = "binomial", R = 1000)
 #'
 #' @export
-spa_cdf_new <- function(t_fixed, P, W, fam, R, max_expansions = 10, prod_resids){
-  t <- t_fixed
+spa_cdf <- function(X, Y, X_on_Z_fit_vals, Y_on_Z_fit_vals, fam, R, max_expansions = 10){
+
+  P <- X_on_Z_fit_vals
+  W <- Y - Y_on_Z_fit_vals
   n <- length(P)
+
+  # compute the products of residuals for each observation
+  prod_resids <- (X - P) * W
+
+  # compute the test statistic
+  test_stat <- 1/sqrt(n) * sum(prod_resids)
+
+  t <- test_stat + 1/sqrt(n) * sum(P*W)
 
   current_lower <- -abs(R)
   current_upper <- abs(R)
@@ -125,18 +136,18 @@ spa_cdf_new <- function(t_fixed, P, W, fam, R, max_expansions = 10, prod_resids)
         r.hat <- sign(s.hat) * sqrt(2 * (sqrt(n)* s.hat * t -
                                          spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
 
-        F.hat <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
+        p.left <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
           (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
       })
 
-      # decide if F.hat is NA or beyond the range [0, 1] or not
-      all(F.hat >= 0, F.hat <= 1, !is.na(F.hat))
+      # decide if p.left is NA or beyond the range [0, 1] or not
+      all(p.left >= 0, p.left <= 1, !is.na(p.left))
     }
     ){
-    res <- list(test_stat = t_fixed - 1/sqrt(n) * sum(P*W),
-                p.left = F.hat,
-                p.right = 1 - F.hat,
-                p.both = 2*min(c(F.hat, 1 - F.hat)),
+    res <- list(test_stat = t - 1/sqrt(n) * sum(P*W),
+                p.left = p.left,
+                p.right = 1 - p.left,
+                p.both = 2*min(c(p.left, 1 - p.left)),
                 gcm.default = FALSE)
   }else{
     test_stat <- sum(prod_resids)/(stats::sd(prod_resids) * sqrt(n-1))
