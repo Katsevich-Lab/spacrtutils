@@ -280,6 +280,7 @@ nb_precomp <- function(data){
 #' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 #' @param Y_on_Z_fam The GLM family for the regression of Y on Z
 #' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' @param fitting_method The fitting method for the regressions X on Z and Y on Z.
 #' @return Simulated data from an appropriate distribution.
 #'
 #' @examples
@@ -293,8 +294,8 @@ nb_precomp <- function(data){
 #' fitted_vals <- fit_models(data, fitting_method, X_on_Z_fam, Y_on_Z_fam)
 #' @export
 fit_models <- function(data,
-                       fitting_method = 'glm',
-                       X_on_Z_fam, Y_on_Z_fam){
+                       X_on_Z_fam, Y_on_Z_fam,
+                       fitting_method = 'glm'){
 
    # extract (X,Y,Z) from inputted data
    X <- data$X; Y <- data$Y; Z <- data$Z
