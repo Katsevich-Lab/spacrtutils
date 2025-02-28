@@ -267,4 +267,90 @@ nb_precomp <- function(data){
 
 
 
+#####################################################################################
+#' Fit models to data
+#'
+#' \code{fit_models} is a function carrying out the saddlepoint approximation to the
+#' dCRT based on GLMs for `X|Z` and `Y|Z`.
+#'
+#' @param data A named list with fields \code{X} (an nx1 vector for the predictor
+#' variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
+#' (an nxp matrix of covariates).
+#' @param X_on_Z_fam The GLM family for the regression of X on Z
+#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' @param Y_on_Z_fam The GLM family for the regression of Y on Z
+#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' @return Simulated data from an appropriate distribution.
+#'
+#' @examples
+#' n <- 100; p <- 5
+#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
+#'              Y = rbinom(n = n, size = 1, prob = 0.7),
+#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+#' X_on_Z_fam <- "binomial"
+#' Y_on_Z_fam <- "binomial"
+#' fitting_method <- "rf"
+#' fitted_vals <- fit_models(data, fitting_method, X_on_Z_fam, Y_on_Z_fam)
+#' @export
+fit_models <- function(data,
+                       fitting_method = 'glm',
+                       X_on_Z_fam, Y_on_Z_fam){
+
+   # extract (X,Y,Z) from inputted data
+   X <- data$X; Y <- data$Y; Z <- data$Z
+   additional_info <- list()
+
+   if(fitting_method == 'glm'){
+      # fit X on Z regression when fitting method is glm
+      X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
+      X_on_Z_fit_vals <- X_on_Z_fit$fitted.values
+
+      # fit Y on Z regression when fitting method is glm
+      if(Y_on_Z_fam == "negative.binomial"){
+         aux_info_Y_on_Z <- nb_precomp(list(Y = Y, Z = Z))
+
+         Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                                   family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                                   mustart = aux_info_Y_on_Z$fitted_values))
+         Y_on_Z_fit_vals <- Y_on_Z_fit$fitted.values
+
+         additional_info$NB.disp.param <- aux_info_Y_on_Z$theta_hat
+      }else{
+         Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
+         Y_on_Z_fit_vals <- Y_on_Z_fit$fitted.values
+
+         additional_info$NB.disp.param <- NA
+      }
+   }else if(fitting_method == 'rf' || fitting_method == "prob_forest"){
+      # fit X on Z regression when fitting method is random forest
+      if(X_on_Z_fam == "binomial"){
+         p.forest.X <- grf::probability_forest(X = as.matrix(Z), Y = as.factor(X))
+         p.hat.X <- predict(p.forest.X, as.matrix(Z), estimate.variance = F)
+
+         X_on_Z_fit_vals <- p.hat.X$predictions[ ,"1"]
+      }
+
+      # fit Y on Z regression when fitting method is random forest
+      if(Y_on_Z_fam == "binomial"){
+         p.forest.Y <- grf::probability_forest(X = as.matrix(Z), Y = as.factor(Y))
+         p.hat.Y <- predict(p.forest.Y, as.matrix(Z), estimate.variance = F)
+
+         Y_on_Z_fit_vals <- p.hat.Y$predictions[ ,"1"]
+      }
+
+      additional_info$NB.disp.param <- NA
+   }
+
+   return(list(X_on_Z_fit_vals = X_on_Z_fit_vals,
+               Y_on_Z_fit_vals = Y_on_Z_fit_vals,
+               additional_info = additional_info))
+}
+
+
+
+
+
+
+
+
 # spacrt - method_helpers.R

@@ -129,8 +129,9 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
 
   for(b in 1:B){
     # resampling X from X|Z
-    resamp_X <- dCRT_dist(n = n, fitted.val = X_on_Z_fit$fitted.values,
-                                  fam = X_on_Z_fam)
+    resamp_X <- dCRT_dist(n = n,
+                          fitted.val = X_on_Z_fit$fitted.values,
+                          fam = X_on_Z_fam)
 
     # compute the products of residuals for each resampled observation
     prod_resid_resamp[b] <- 1/sqrt(n) * sum((resamp_X - X_on_Z_fit$fitted.values)*
@@ -176,8 +177,14 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' X_on_Z_fam <- "binomial"
 #' Y_on_Z_fam <- "poisson"
 #' results <- spaCRT(data, X_on_Z_fam, Y_on_Z_fam, normalize)
-#' results$test_stat
-#' results$p_value
+#'
+#' n <- 50; p <- 4; normalize <- FALSE; return_cdf <- FALSE
+#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
+#'              Y = rbinom(n = n, size = 1, prob = 0.7),
+#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+#' X_on_Z_fam <- "binomial"
+#' Y_on_Z_fam <- "binomial"
+#' results <- spaCRT(data, X_on_Z_fam, Y_on_Z_fam, fitting_method = "rf")
 #'
 #' @return A named list with fields \code{test_stat}, \code{left_side_p_value},
 #' \code{right_side_p_value}, \code{both_side_p_value}, \code{cdf}, and
@@ -190,46 +197,22 @@ dCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #'
 #' @export
 spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
-                   normalize = FALSE, return_cdf = FALSE, R = 5) {
+                   normalize = FALSE, return_cdf = FALSE,
+                   fitting_method = 'glm',
+                   R = 5) {
 
-  # extract (X,Y,Z) from inputted data
-  X <- data$X; Y <- data$Y; Z <- data$Z
-  n <- length(X)
+  fitted_vals <- fit_models(data = data,
+                            fitting_method = fitting_method,
+                            X_on_Z_fam = X_on_Z_fam, Y_on_Z_fam = Y_on_Z_fam)
 
-  # fit X on Z regression
-  X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
-
-  # fit Y on Z regression
-  if(Y_on_Z_fam == "negative.binomial"){
-    aux_info_Y_on_Z <- nb_precomp(list(Y = Y, Z = Z))
-
-    Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                              family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                              mustart = aux_info_Y_on_Z$fitted_values))
-    NB.disp.param <- aux_info_Y_on_Z$theta_hat
-  }else{
-    Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
-    NB.disp.param <- "Invalid request"
-  }
-
-  W <- Y - Y_on_Z_fit$fitted.values
-  P <- X_on_Z_fit$fitted.values
-
-  # compute the products of residuals for each observation
-  prod_resids <- (X - X_on_Z_fit$fitted.values) * W
-
-  # compute the test statistic
-  test_stat <- 1/sqrt(n) * sum(prod_resids)
-
-  # perform saddlepoint approximation
-  res <- suppressWarnings(spa_cdf(X = X, Y = Y,
-                                  X_on_Z_fit_vals = X_on_Z_fit$fitted.values,
-                                  Y_on_Z_fit_vals = Y_on_Z_fit$fitted.values,
+  res <- suppressWarnings(spa_cdf(X = data$X, Y = data$Y,
+                                  X_on_Z_fit_vals = fitted_vals$X_on_Z_fit_vals,
+                                  Y_on_Z_fit_vals = fitted_vals$Y_on_Z_fit_vals,
                                   fam = X_on_Z_fam,
                                   R = abs(R),
                                   max_expansions = 10))
 
-  return(res |> append(list(NB.disp.param = NB.disp.param), after = 4))
+  return(res |> append(list(NB.disp.param = fitted_vals$additional_info$NB.disp.param), after = 4))
 }
 
 
