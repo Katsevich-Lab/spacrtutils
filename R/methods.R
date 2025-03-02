@@ -196,7 +196,9 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
                         R = abs(R),
                         max_expansions = 10) |> suppressWarnings()
 
-  return(spa_result |> append(list(NB.disp.param = fitted_vals$additional_info$NB.disp.param), after = 4))
+  NB.disp.param <- fitted_vals$additional_info$NB.disp.param
+
+  return(spa_result |> append(list(NB.disp.param = NB.disp.param), after = 4))
 }
 
 
