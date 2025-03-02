@@ -34,6 +34,11 @@ data <- generate_data_nb(n = n, gamma_0 = gamma_0, gamma_1 = gamma_1,
 X_on_Z_fam <- "binomial"
 Y_on_Z_fam <- "negative.binomial"
 
-(results_old <- spaCRT_old(data, X_on_Z_fam, Y_on_Z_fam, normalize))
-(results_new <- spaCRT(data, X_on_Z_fam, Y_on_Z_fam, normalize))
-(results_gcm <- GCM(data, X_on_Z_fam, Y_on_Z_fam))
+spaCRT_old(data, X_on_Z_fam, Y_on_Z_fam, normalize)
+spaCRT(data, X_on_Z_fam, Y_on_Z_fam, fitting_method = 'glm', normalize)
+
+GCM_old(data, X_on_Z_fam, Y_on_Z_fam)
+GCM(data, X_on_Z_fam, Y_on_Z_fam, fitting_method = 'glm')
+
+dCRT_old(data, X_on_Z_fam, Y_on_Z_fam)
+dCRT(data, X_on_Z_fam, Y_on_Z_fam, fitting_method = 'glm')
