@@ -53,7 +53,6 @@ spa_cdf <- function(X, Y, X_on_Z_fit_vals, Y_on_Z_fit_vals, fam, R, max_expansio
       success_uniroot <- TRUE
       break
     }, error = function(e) {
-      message(sprintf("Attempt %d failed, expanding interval...", i))
       expansion_factor <- ifelse(i <= max_expansions/2, 2, 10)
       current_lower <<- current_lower * expansion_factor
       current_upper <<- current_upper * expansion_factor
