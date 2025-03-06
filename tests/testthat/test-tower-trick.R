@@ -1,5 +1,7 @@
 library(testthat)
 library(glmnet)
+library(withr)
+library(SNPknock)
 
 # generate pEmit, Q and pInit using spacrt package
 p <- 500

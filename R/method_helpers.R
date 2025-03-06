@@ -19,11 +19,8 @@
 #' X <- data$X; Y <- data$Y; Z <- data$Z
 #' X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = "binomial"))
 #' Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = "poisson"))
-#' W <- Y - Y_on_Z_fit$fitted.values
-#' P <- X_on_Z_fit$fitted.values
-#' prod_resids <- (X - X_on_Z_fit$fitted.values) * W
-#' test_stat <- 1/sqrt(n) * sum(prod_resids)
-#' spa_cdf(t = test_stat + sum(P*W)/sqrt(n), P = P, W = W, fam = "binomial", R = 1000)
+#' spa_cdf(X = X, Y = Y, X_on_Z_fit_vals = X_on_Z_fit$fitted.values,
+#'  Y_on_Z_fit_vals = Y_on_Z_fit$fitted.values, fam = "binomial", R = 1000)
 #'
 #' @export
 spa_cdf <- function(X, Y, X_on_Z_fit_vals, Y_on_Z_fit_vals, fam, R, max_expansions = 10){
@@ -281,6 +278,7 @@ nb_precomp <- function(data){
 #' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
 #' @param fitting_method The fitting method for the regressions X on Z and Y on Z.
 #' @return Simulated data from an appropriate distribution.
+#' @importFrom stats predict
 #'
 #' @examples
 #' n <- 100; p <- 5
@@ -290,7 +288,7 @@ nb_precomp <- function(data){
 #' X_on_Z_fam <- "binomial"
 #' Y_on_Z_fam <- "binomial"
 #' fitting_method <- "rf"
-#' fitted_vals <- fit_models(data, fitting_method, X_on_Z_fam, Y_on_Z_fam)
+#' fitted_vals <- fit_models(data, X_on_Z_fam, Y_on_Z_fam, fitting_method)
 #' @export
 fit_models <- function(data,
                        X_on_Z_fam, Y_on_Z_fam,

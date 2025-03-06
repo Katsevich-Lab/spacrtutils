@@ -206,6 +206,7 @@ fastPhase_new <- function (fp_path, X_file, out_path = NULL, K = 12, numit = 25,
 #'
 #' @return List including final pEmit, Q and pInit
 #' @export
+#' @importFrom stats rbeta
 help_dgp <- function(K, M, p,
                      gamma = 0.5,
                      stay_prob,
@@ -414,3 +415,42 @@ compute_conditional_prob_Rcpp <- function(x, pInit, pEmit, Q){
   # return the conditional probability vector
   return(conditional_prob)
 }
+
+#' Fit the HMM to get estimated parameters using fastPhase
+#'
+#' @param fp_path File path to the fastPhase software
+#' @param out_path File path to the folder where estimation results will be saved
+#' @param hashing_id A hashing sequence with length 20
+#' @param X_file File path to the folder where inp file input is saved
+#' @param K Number of states for the hidden variable
+#'
+#' @return A list of estimated parameters
+#' @export
+fit_HMM <- function(fp_path, out_path, hashing_id, X_file, K){
+
+   # obtain the output dir
+   dir.create(out_path, recursive = TRUE)
+
+   # run fastPhase
+   spacrt::fastPhase_new(fp_path = fp_path,
+                         X_file = X_file,
+                         out_path = out_path,
+                         K = K, phased = TRUE)
+
+   # transform the results to R
+   estimated_parameter <- SNPknock::loadHMM(r_file = paste0(out_path, "/_rhat.txt"),
+                                            alpha_file = paste0(out_path, "/_alphahat.txt"),
+                                            theta_file = paste0(out_path, "/_thetahat.txt"),
+                                            char_file = paste0(out_path, "/_origchars"),
+                                            compact = FALSE, phased = TRUE
+   )
+
+   # compute the conditional probability with estimated Q, pEmit and pInit
+   renamed_output <- name_output(Q = estimated_parameter$Q,
+                                 pEmit = estimated_parameter$pEmit,
+                                 pInit = estimated_parameter$pInit)
+
+   # output the parameters
+   return(renamed_output)
+}
+

@@ -14,8 +14,14 @@ RoxygenNote: 7.3.2
 Imports: 
     stats,
     MASS,
-    Rcpp
+    Rcpp,
+    knockoff,
+    glmnet,
+    grf,
+    dplyr,
+    SNPknock
 Suggests:
+    withr,
     sceptre,
     statmod,
     testthat (>= 3.0.0)

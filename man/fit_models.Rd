@@ -34,5 +34,5 @@ data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
 X_on_Z_fam <- "binomial"
 Y_on_Z_fam <- "binomial"
 fitting_method <- "rf"
-fitted_vals <- fit_models(data, fitting_method, X_on_Z_fam, Y_on_Z_fam)
+fitted_vals <- fit_models(data, X_on_Z_fam, Y_on_Z_fam, fitting_method)
 }

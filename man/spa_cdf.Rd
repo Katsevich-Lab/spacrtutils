@@ -36,10 +36,7 @@ data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
 X <- data$X; Y <- data$Y; Z <- data$Z
 X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = "binomial"))
 Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = "poisson"))
-W <- Y - Y_on_Z_fit$fitted.values
-P <- X_on_Z_fit$fitted.values
-prod_resids <- (X - X_on_Z_fit$fitted.values) * W
-test_stat <- 1/sqrt(n) * sum(prod_resids)
-spa_cdf(t = test_stat + sum(P*W)/sqrt(n), P = P, W = W, fam = "binomial", R = 1000)
+spa_cdf(X = X, Y = Y, X_on_Z_fit_vals = X_on_Z_fit$fitted.values,
+ Y_on_Z_fit_vals = Y_on_Z_fit$fitted.values, fam = "binomial", R = 1000)
 
 }

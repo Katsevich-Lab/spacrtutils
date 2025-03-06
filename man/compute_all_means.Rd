@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper-variable-selection.R
 \name{compute_all_means}
 \alias{compute_all_means}
-\title{Compute all conditional means for Y|X_{-j}}
+\title{Compute all conditional means for Y given X_-j}
 \usage{
 compute_all_means(
   fitted_model,
@@ -28,8 +28,8 @@ compute_all_means(
 \code{fitted_model} should be a low-dimensional GLM}
 }
 \value{
-Conditional probability vector E(Y|X_{-j} = x_{-j})
+Conditional probability vector
 }
 \description{
-Compute all conditional means for Y|X_{-j}
+Compute all conditional means for Y given X_-j
 }
