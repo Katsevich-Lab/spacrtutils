@@ -43,6 +43,7 @@ spa_cdf <- function(X, Y, X_on_Z_fit_vals, Y_on_Z_fit_vals, fam, R, max_expansio
 
   for (i in seq_len(max_expansions)) {
     tryCatch({
+      # solve the saddlepoint equation
       s.hat <- stats::uniroot(
         f = function(s) d1.wcgf(s, P = P, W = W, fam) - sqrt(n)*t,
         lower = current_lower, upper = current_upper, tol = .Machine$double.eps)$root
@@ -50,6 +51,7 @@ spa_cdf <- function(X, Y, X_on_Z_fit_vals, Y_on_Z_fit_vals, fam, R, max_expansio
       success_uniroot <- TRUE
       break
     }, error = function(e) {
+      # expand the search space if the saddlepoint is not found
       expansion_factor <- ifelse(i <= max_expansions/2, 2, 10)
       current_lower <<- current_lower * expansion_factor
       current_upper <<- current_upper * expansion_factor
@@ -64,6 +66,7 @@ spa_cdf <- function(X, Y, X_on_Z_fit_vals, Y_on_Z_fit_vals, fam, R, max_expansio
         r.hat <- sign(s.hat) * sqrt(2 * (sqrt(n)* s.hat * t -
                                          spacrt::wcgf(s = s.hat, P = P, W = W, fam)))
 
+        # Lugannani-Rice formula
         p.left <- stats::pnorm(r.hat) + stats::dnorm(r.hat) *
           (1/r.hat - 1/(s.hat*sqrt(spacrt::d2.wcgf(s = s.hat, P = P, W = W, fam))))
       })
@@ -72,11 +75,11 @@ spa_cdf <- function(X, Y, X_on_Z_fit_vals, Y_on_Z_fit_vals, fam, R, max_expansio
       all(p.left >= 0, p.left <= 1, !is.na(p.left))
     }
     ){
-    res <- list(test_stat = t - 1/sqrt(n) * sum(P*W),
-                p.left = p.left,
-                p.right = 1 - p.left,
-                p.both = 2*min(c(p.left, 1 - p.left)),
-                gcm.default = FALSE)
+       res <- list(test_stat = t - 1/sqrt(n) * sum(P*W),
+                   p.left = p.left,
+                   p.right = 1 - p.left,
+                   p.both = 2*min(c(p.left, 1 - p.left)),
+                   gcm.default = FALSE)
   }else{
     test_stat <- sum(prod_resids)/(stats::sd(prod_resids) * sqrt(n-1))
 
@@ -170,7 +173,7 @@ d1.wcgf <- function(s, P, W, fam){
   if(fam == 'gaussian') return()
   if(fam == 'Gamma') return()
   if(fam == 'inverse.gaussian') return()
-  if(fam == 'poisson') return(sum(P*exp(s*W)*W))
+  if(fam == 'poisson') return(sum(P * exp(s*W) * W))
   if(fam == 'quasi') return()
   if(fam == 'quasibinomial') return()
   if(fam == 'quasipoisson') return()
@@ -292,7 +295,8 @@ nb_precomp <- function(data){
 #' @export
 fit_models <- function(data,
                        X_on_Z_fam, Y_on_Z_fam,
-                       fitting_method = 'glm'){
+                       fitting_method = 'glm',
+                       fit_vals_own = NULL){
 
    # extract (X,Y,Z) from inputted data
    X <- data$X; Y <- data$Y; Z <- data$Z
@@ -313,13 +317,13 @@ fit_models <- function(data,
          Y_on_Z_fit_vals <- Y_on_Z_fit$fitted.values
 
          additional_info$NB.disp.param <- aux_info_Y_on_Z$theta_hat
-      }else{
+      } else{
          Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
          Y_on_Z_fit_vals <- Y_on_Z_fit$fitted.values
 
          additional_info$NB.disp.param <- NA
       }
-   }else if(fitting_method == 'rf' || fitting_method == "prob_forest"){
+   } else if(fitting_method == 'rf' || fitting_method == "prob_forest"){
       # fit X on Z regression when fitting method is random forest
       if(X_on_Z_fam == "binomial"){
          p.forest.X <- grf::probability_forest(X = as.matrix(Z), Y = as.factor(X))
@@ -335,6 +339,18 @@ fit_models <- function(data,
 
          Y_on_Z_fit_vals <- p.hat.Y$predictions[ ,"1"]
       }
+
+      additional_info$NB.disp.param <- NA
+   } else if(fitting_method == 'own') {
+      # Validate that fit_vals_own is provided and contains necessary components
+      if(is.list(fit_vals_own) ||
+          !all(c("X_on_Z_fit_vals", "Y_on_Z_fit_vals") %in% names(fit_vals_own))) {
+         stop("fit_vals_own must be a list containing 'X_on_Z_fit_vals' and 'Y_on_Z_fit_vals' when using fitting_method = 'own'")
+      }
+
+      # Extract pre-computed values from fit_vals_own
+      X_on_Z_fit_vals <- fit_vals_own$X_on_Z_fit_vals
+      Y_on_Z_fit_vals <- fit_vals_own$Y_on_Z_fit_vals
 
       additional_info$NB.disp.param <- NA
    }
