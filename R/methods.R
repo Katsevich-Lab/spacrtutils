@@ -188,7 +188,7 @@ spaCRT <- function(data, X_on_Z_fam, Y_on_Z_fam,
 
   fitted_vals <- fit_models(data = data,
                             X_on_Z_fam = X_on_Z_fam, Y_on_Z_fam = Y_on_Z_fam,
-                            fitting_method = fitting_method)
+                            fitting_method = fitting_method) |> suppressWarnings()
 
   spa_result <- spa_cdf(X = data$X, Y = data$Y,
                         X_on_Z_fit_vals = fitted_vals$X_on_Z_fit_vals,
