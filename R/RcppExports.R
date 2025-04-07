@@ -2,10 +2,10 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 compute_forward_prob_cpp <- function(x, pInit, pEmit, Q, p, M, K) {
-    .Call(`_spacrt_compute_forward_prob_cpp`, x, pInit, pEmit, Q, p, M, K)
+    .Call(`_spacrtutils_compute_forward_prob_cpp`, x, pInit, pEmit, Q, p, M, K)
 }
 
 compute_backward_prob_cpp <- function(x, pInit, pEmit, Q, p, M, K) {
-    .Call(`_spacrt_compute_backward_prob_cpp`, x, pInit, pEmit, Q, p, M, K)
+    .Call(`_spacrtutils_compute_backward_prob_cpp`, x, pInit, pEmit, Q, p, M, K)
 }
 

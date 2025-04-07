@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // compute_forward_prob_cpp
 NumericMatrix compute_forward_prob_cpp(const IntegerVector& x, const NumericVector& pInit, const NumericVector& pEmit, const NumericVector& Q, int p, int M, int K);
-RcppExport SEXP _spacrt_compute_forward_prob_cpp(SEXP xSEXP, SEXP pInitSEXP, SEXP pEmitSEXP, SEXP QSEXP, SEXP pSEXP, SEXP MSEXP, SEXP KSEXP) {
+RcppExport SEXP _spacrtutils_compute_forward_prob_cpp(SEXP xSEXP, SEXP pInitSEXP, SEXP pEmitSEXP, SEXP QSEXP, SEXP pSEXP, SEXP MSEXP, SEXP KSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -29,7 +29,7 @@ END_RCPP
 }
 // compute_backward_prob_cpp
 NumericMatrix compute_backward_prob_cpp(const IntegerVector& x, const NumericVector& pInit, const NumericVector& pEmit, const NumericVector& Q, int p, int M, int K);
-RcppExport SEXP _spacrt_compute_backward_prob_cpp(SEXP xSEXP, SEXP pInitSEXP, SEXP pEmitSEXP, SEXP QSEXP, SEXP pSEXP, SEXP MSEXP, SEXP KSEXP) {
+RcppExport SEXP _spacrtutils_compute_backward_prob_cpp(SEXP xSEXP, SEXP pInitSEXP, SEXP pEmitSEXP, SEXP QSEXP, SEXP pSEXP, SEXP MSEXP, SEXP KSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -46,12 +46,12 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_spacrt_compute_forward_prob_cpp", (DL_FUNC) &_spacrt_compute_forward_prob_cpp, 7},
-    {"_spacrt_compute_backward_prob_cpp", (DL_FUNC) &_spacrt_compute_backward_prob_cpp, 7},
+    {"_spacrtutils_compute_forward_prob_cpp", (DL_FUNC) &_spacrtutils_compute_forward_prob_cpp, 7},
+    {"_spacrtutils_compute_backward_prob_cpp", (DL_FUNC) &_spacrtutils_compute_backward_prob_cpp, 7},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_spacrt(DllInfo *dll) {
+RcppExport void R_init_spacrtutils(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
