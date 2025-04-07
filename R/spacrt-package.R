@@ -1,3 +1,3 @@
-#' @useDynLib spacrt, .registration=TRUE
+#' @useDynLib spacrtutils, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
 NULL
