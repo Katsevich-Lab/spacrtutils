@@ -4,7 +4,13 @@
 \alias{fit_models}
 \title{Fit models to data}
 \usage{
-fit_models(data, X_on_Z_fam, Y_on_Z_fam, fitting_method = "glm")
+fit_models(
+  data,
+  X_on_Z_fam,
+  Y_on_Z_fam,
+  fitting_method = "glm",
+  fit_vals_own = NULL
+)
 }
 \arguments{
 \item{data}{A named list with fields \code{X} (an nx1 vector for the predictor
