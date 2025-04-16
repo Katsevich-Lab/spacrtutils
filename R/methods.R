@@ -27,9 +27,9 @@
 #'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
 #' X_on_Z_fam <- "binomial"
 #' Y_on_Z_fam <- "poisson"
-#' results <- GCM(data, X_on_Z_fam, Y_on_Z_fam,
-#'                fitting_X_on_Z = 'rf',
-#'                fitting_Y_on_Z = 'glm')
+#' GCM_internal(data, X_on_Z_fam, Y_on_Z_fam,
+#'              fitting_X_on_Z = 'rf',
+#'              fitting_Y_on_Z = 'glm')
 #'
 #' @export
 GCM_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
@@ -100,10 +100,10 @@ GCM_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
 #' X_on_Z_fam <- "binomial"
 #' Y_on_Z_fam <- "poisson"
-#' (results <- dCRT(data, X_on_Z_fam, Y_on_Z_fam,
-#'                 fitting_X_on_Z = 'rf',
-#'                 fitting_Y_on_Z = 'glm',
-#'                 B = 2000))
+#' dCRT_internal(data, X_on_Z_fam, Y_on_Z_fam,
+#'               fitting_X_on_Z = 'rf',
+#'               fitting_Y_on_Z = 'glm',
+#'               B = 2000)
 #'
 #' @export
 dCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
@@ -178,7 +178,6 @@ dCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' Works only if fitting_X_on_Z = 'own'
 #' @param fit_vals_Y_on_Z_own Vector of fitted values for Y on Z in case the user's custom method.
 #' Works only if fitting_Y_on_Z = 'own'
-#' @param alternative A character string specifying the alternative hypothesis, must be one of "two.sided" (default), "greater" or "less".
 #'
 #' @return A named list with fields \code{test_stat}, \code{left_side_p_value},
 #' \code{right_side_p_value}, \code{both_side_p_value}, and
@@ -192,9 +191,9 @@ dCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
 #' X_on_Z_fam <- "binomial"
 #' Y_on_Z_fam <- "binomial"
-#' spaCRT(data, X_on_Z_fam, Y_on_Z_fam,
-#'        fitting_X_on_Z = 'rf',
-#'        fitting_Y_on_Z = 'glm')
+#' spaCRT_internal(data, X_on_Z_fam, Y_on_Z_fam,
+#'                 fitting_X_on_Z = 'rf',
+#'                 fitting_Y_on_Z = 'glm')
 #'
 #' @export
 spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
@@ -227,35 +226,6 @@ spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 
    return(spa_result |> append(list(NB.disp.param = NB.disp.param), after = 4))
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #####################################################################################
