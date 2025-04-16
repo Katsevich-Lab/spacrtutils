@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(spacrt)
+library(spacrtutils)
 
-test_check("spacrt")
+test_check("spacrtutils")

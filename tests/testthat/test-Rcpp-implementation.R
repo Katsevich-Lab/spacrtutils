@@ -1,5 +1,5 @@
 library(testthat)
-library(spacrt)
+library(spacrtutils)
 library(SNPknock)
 
 # necessary parameters
