@@ -20,7 +20,7 @@
 #' X <- data$X; Y <- data$Y; Z <- data$Z
 #' X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = "binomial"))
 #' Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = "poisson"))
-#' spacrt:::spa_cdf(X = X, Y = Y,
+#' spa_cdf(X = X, Y = Y,
 #'                  X_on_Z_fit_vals = X_on_Z_fit$fitted.values,
 #'                  Y_on_Z_fit_vals = Y_on_Z_fit$fitted.values,
 #'                  fam = "binomial", R = 1000)

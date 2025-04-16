@@ -8,7 +8,7 @@ p <- 500
 K <- 5
 M <- 2
 n <- 1000
-aux_info <- withr::with_seed(1, spacrt::help_dgp(p = p, K = K, M = M,
+aux_info <- withr::with_seed(1, help_dgp(p = p, K = K, M = M,
                                                  stay_prob = .9, beta_prior = TRUE,
                                                  alpha = 0.5, beta = 1.5))
 
@@ -31,7 +31,7 @@ Y <- rbinom(n = n, size = 1, prob = 1 / (1 + exp(-gamma_0 - colSums(t(X[, 1:num_
 # compute the conditional probability with oracle Q, pEmit and pInit
 conditional_mean <- t(
   apply(X, 1, function(x){
-    spacrt::compute_conditional_prob_Rcpp(x = x, pInit = aux_info$pInit,
+    compute_conditional_prob_Rcpp(x = x, pInit = aux_info$pInit,
                                           pEmit = aux_info$pEmit, Q = aux_info$Q)[, 2]
 
   })
@@ -47,7 +47,7 @@ test_that("compute_all_means_efficient works!", {
   system.time({
     leave_one_fit <- t(
       sapply(1:n, function(i){
-        spacrt::compute_all_means(fitted_model = fitted_lasso, lambda = "min", x = X[i, ],
+        compute_all_means(fitted_model = fitted_lasso, lambda = "min", x = X[i, ],
                                   support_x = c(0, 1),
                                   conditional_prob = matrix(c(1 - conditional_mean[i, ],
                                                               conditional_mean[i, ]), ncol = 2))
@@ -57,7 +57,7 @@ test_that("compute_all_means_efficient works!", {
 
   # more efficient implementation
   system.time({
-    leave_one_fit_efficient <- spacrt::compute_all_means_efficient(fitted_model = fitted_lasso,
+    leave_one_fit_efficient <- compute_all_means_efficient(fitted_model = fitted_lasso,
                                                                    X = X, conditional_prob_mat = cbind(1 - conditional_mean, conditional_mean),
                                                                    support_x = c(0, 1), lambda = "min")
   })["elapsed"]

@@ -202,7 +202,7 @@ GCM_HMM <- function(data){
    # compute the conditional probability with oracle Q, pEmit and pInit
    conditional_mean <- t(
       apply(X, 1, function(x){
-         spacrt::compute_conditional_prob_Rcpp(x = x, pInit = HMM_parameter$pInit,
+         compute_conditional_prob_Rcpp(x = x, pInit = HMM_parameter$pInit,
                                                pEmit = HMM_parameter$pEmit, Q = HMM_parameter$Q)[, 2]
 
       })
@@ -218,7 +218,7 @@ GCM_HMM <- function(data){
    )
    for (lambda_param in data$lasso_model) {
       # use lambada.model for inference
-      leave_one_fit <- spacrt::compute_all_means_efficient(fitted_model = fitted_lasso,
+      leave_one_fit <- compute_all_means_efficient(fitted_model = fitted_lasso,
                                                            X = X, conditional_prob_mat = cbind(1 - conditional_mean, conditional_mean),
                                                            support_x = c(0, 1), lambda = lambda_param)
 
@@ -280,7 +280,7 @@ dCRT_HMM <- function(data){
    # compute the conditional probability with oracle Q, pEmit and pInit
    conditional_mean <- t(
       apply(X, 1, function(x){
-         spacrt::compute_conditional_prob_Rcpp(x = x, pInit = HMM_parameter$pInit,
+         compute_conditional_prob_Rcpp(x = x, pInit = HMM_parameter$pInit,
                                                pEmit = HMM_parameter$pEmit,
                                                Q = HMM_parameter$Q)[, 2]
 
@@ -297,7 +297,7 @@ dCRT_HMM <- function(data){
    )
    for (lambda_param in data$lasso_model) {
       # use lambda_param for inference
-      leave_one_fit <- spacrt::compute_all_means_efficient(fitted_model = fitted_lasso,
+      leave_one_fit <- compute_all_means_efficient(fitted_model = fitted_lasso,
                                                            X = X, conditional_prob_mat = cbind(1 - conditional_mean, conditional_mean),
                                                            support_x = c(0, 1), lambda = lambda_param)
 
@@ -373,7 +373,7 @@ spaCRT_HMM <- function(data){
    # compute the conditional probability with oracle Q, pEmit and pInit
    conditional_mean <- t(
       apply(X, 1, function(x){
-         spacrt::compute_conditional_prob_Rcpp(x = x, pInit = HMM_parameter$pInit,
+         compute_conditional_prob_Rcpp(x = x, pInit = HMM_parameter$pInit,
                                                pEmit = HMM_parameter$pEmit, Q = HMM_parameter$Q)[, 2]
 
       })
@@ -389,13 +389,13 @@ spaCRT_HMM <- function(data){
    )
    for (lambda_param in data$lasso_model) {
       # use lambda_param for inference
-      leave_one_fit <- spacrt::compute_all_means_efficient(fitted_model = fitted_lasso,
+      leave_one_fit <- compute_all_means_efficient(fitted_model = fitted_lasso,
                                                            X = X, conditional_prob_mat = cbind(1 - conditional_mean, conditional_mean),
                                                            support_x = c(0, 1), lambda = lambda_param)
 
       # pass the argument to spa_cdf in spacrt package
       p_values_output <- sapply(1:p, function(j){
-         suppressWarnings(spacrt::spa_cdf(X = X[, j],
+         suppressWarnings(spa_cdf(X = X[, j],
                                           Y = Y,
                                           X_on_Z_fit_vals = conditional_mean[, j],
                                           Y_on_Z_fit_vals = leave_one_fit[, j],
@@ -444,7 +444,7 @@ knockoff_HMM <- function(data){
    dir.create(out_path, recursive = TRUE)
 
    # run fastPhase
-   spacrt::fastPhase_new(fp_path = fp_path,
+   fastPhase_new(fp_path = fp_path,
                          X_file = X_file,
                          out_path = out_path,
                          K = K, phased = TRUE)

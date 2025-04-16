@@ -432,7 +432,7 @@ fit_HMM <- function(fp_path, out_path, hashing_id, X_file, K){
    dir.create(out_path, recursive = TRUE)
 
    # run fastPhase
-   spacrt::fastPhase_new(fp_path = fp_path,
+   fastPhase_new(fp_path = fp_path,
                          X_file = X_file,
                          out_path = out_path,
                          K = K, phased = TRUE)
