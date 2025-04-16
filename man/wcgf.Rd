@@ -24,7 +24,4 @@ CGF of the weighted distribution evaluated at \code{s}.
 \code{wcgf} is a function computing the cumulant generating function (CGF) of
 distributions, multiplied by a weight function, from the GLM family
 }
-\examples{
-wcgf(s = 5, P = c(1,1,2), W = c(1,1,1), fam = 'poisson')
-
-}
+\keyword{internal}
