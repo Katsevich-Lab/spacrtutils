@@ -19,7 +19,8 @@ variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
 }
 \value{
 A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
-\code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value), and \code{NB.disp.param}..
+\code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value), and
+\code{NB.disp.param}.
 }
 \description{
 \code{score.test} is a function carrying out the saddlepoint approximation to the

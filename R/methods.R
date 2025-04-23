@@ -189,7 +189,8 @@ spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' score.test(data, X_on_Z_fam, Y_on_Z_fam)
 #'
 #' @return A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
-#' \code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value), and \code{NB.disp.param}..
+#' \code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value), and
+#' \code{NB.disp.param}.
 #'
 #' @export
 score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
