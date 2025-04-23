@@ -12,4 +12,9 @@
       estimate_theta <- get("estimate_theta", envir = asNamespace("sceptre"))
       assign("estimate_theta", estimate_theta, envir = ns)
    }
+
+   if (requireNamespace("spacrt", quietly = TRUE)) {
+      spa_cdf <- get("spa_cdf", envir = asNamespace("spacrt"))
+      assign("spa_cdf", spa_cdf, envir = ns)
+   }
 }
