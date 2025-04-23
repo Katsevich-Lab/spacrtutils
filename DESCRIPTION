@@ -18,7 +18,6 @@ Imports:
     Rcpp,
     knockoff,
     glmnet,
-    grf,
     dplyr,
     SNPknock
 Suggests:
