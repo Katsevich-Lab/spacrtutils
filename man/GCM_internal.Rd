@@ -37,8 +37,8 @@ Works only if fitting_X_on_Z = 'own'.}
 Works only if fitting_Y_on_Z = 'own'.}
 }
 \value{
-A named list with fields \code{test_stat} and \code{left_side_p_value},
-\code{right_side_p_value}, \code{both_side_p_value}.
+A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
+\code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value).
 }
 \description{
 \code{GCM_internal} is a function carrying out the GCM test based on GLMs for \code{X|Z} and \code{Y|Z}.

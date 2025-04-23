@@ -37,11 +37,11 @@ Works only if fitting_X_on_Z = 'own'.}
 \item{fit_vals_Y_on_Z_own}{Vector of fitted values for Y on Z in case the user's custom method.
 Works only if fitting_Y_on_Z = 'own'.}
 
-\item{B}{The number of resamples to draw.}
+\item{B}{The number of resamples to draw (Default value is 2000).}
 }
 \value{
-A named list with fields \code{test_stat}, \code{left_side_p_value},
-\code{right_side_p_value}, and \code{both_side_p_value}.
+A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
+\code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value).
 }
 \description{
 \code{dCRT_internal} is a function carrying out the dCRT based on GLMs for \code{X|Z} and \code{Y|Z}.

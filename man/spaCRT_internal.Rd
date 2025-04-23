@@ -37,10 +37,11 @@ Works only if fitting_X_on_Z = 'own'.}
 Works only if fitting_Y_on_Z = 'own'.}
 }
 \value{
-A named list with fields \code{test_stat}, \code{left_side_p_value},
-\code{right_side_p_value}, \code{both_side_p_value}, and
-\code{gcm.default}.
-gcm.default returns TRUE if GCM was employed due to the failure of spaCRT.
+A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
+\code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value), and \code{spa.success}.
+\code{spa.success} returns TRUE if the saddlepoint equation could be solved; otherwise,
+the backup method (GCM) was employed.
+.
 }
 \description{
 \code{spaCRT_internal} is a function carrying out the saddlepoint approximation to the
