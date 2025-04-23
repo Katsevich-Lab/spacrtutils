@@ -7,12 +7,13 @@
              requireNamespace, quietly = TRUE)
    ))
 
-   # call estimate_theta() from sceptre
+   # Dynamically retrieve the unexported function from the sceptre namespace
    if (requireNamespace("sceptre", quietly = TRUE)) {
       estimate_theta <- get("estimate_theta", envir = asNamespace("sceptre"))
       assign("estimate_theta", estimate_theta, envir = ns)
    }
 
+   # Dynamically retrieve the unexported functions from the spacrt namespace
    if (requireNamespace("spacrt", quietly = TRUE)) {
       spa_cdf <- get("spa_cdf", envir = asNamespace("spacrt"))
       assign("spa_cdf", spa_cdf, envir = ns)
