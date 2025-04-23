@@ -18,8 +18,8 @@
 #' @param fit_vals_Y_on_Z_own Vector of fitted values for Y on Z in case the user's custom method.
 #' Works only if fitting_Y_on_Z = 'own'.
 #'
-#' @return A named list with fields \code{test_stat} and \code{left_side_p_value},
-#' \code{right_side_p_value}, \code{both_side_p_value}.
+#' @return A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
+#' \code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value).
 #'
 #' @examples
 #' n <- 20; p <- 2
@@ -44,7 +44,7 @@ GCM_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
                           fitting_Y_on_Z = 'glm',
                           fit_vals_X_on_Z_own = NULL,
                           fit_vals_Y_on_Z_own = NULL,
-                          alternative = 'left')
+                          alternative = 'less')
 
    test_stat <- results$test_stat
 
@@ -63,10 +63,10 @@ GCM_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' \code{dCRT_internal} is a function carrying out the dCRT based on GLMs for `X|Z` and `Y|Z`.
 #'
 #' @inheritParams GCM_internal
-#' @param B The number of resamples to draw.
+#' @param B The number of resamples to draw (Default value is 2000).
 #'
-#' @return A named list with fields \code{test_stat}, \code{left_side_p_value},
-#' \code{right_side_p_value}, and \code{both_side_p_value}.
+#' @return A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
+#' \code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value).
 #'
 #' @examples
 #' n <- 80; p <- 2
@@ -93,7 +93,7 @@ dCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
                            fitting_Y_on_Z = 'glm',
                            fit_vals_X_on_Z_own = NULL,
                            fit_vals_Y_on_Z_own = NULL,
-                           alternative = 'left',
+                           alternative = 'less',
                            B = B)
 
    test_stat <- results$test_stat
@@ -119,10 +119,11 @@ dCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #'
 #' @inheritParams GCM_internal
 #'
-#' @return A named list with fields \code{test_stat}, \code{left_side_p_value},
-#' \code{right_side_p_value}, \code{both_side_p_value}, and
-#' \code{gcm.default}.
-#' gcm.default returns TRUE if GCM was employed due to the failure of spaCRT.
+#' @return A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
+#' \code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value), and \code{spa.success}.
+#' \code{spa.success} returns TRUE if the saddlepoint equation could be solved; otherwise,
+#' the backup method (GCM) was employed.
+#' .
 #'
 #' @examples
 #' n <- 50; p <- 4
@@ -147,7 +148,7 @@ spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
                              fitting_Y_on_Z = 'glm',
                              fit_vals_X_on_Z_own = NULL,
                              fit_vals_Y_on_Z_own = NULL,
-                             alternative = 'left')
+                             alternative = 'less')
 
    test_stat <- results$test_stat
 
@@ -159,7 +160,8 @@ spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
    return(list(test_stat = test_stat,
                p.left = p.left,
                p.right = p.right,
-               p.both = p.both))
+               p.both = p.both,
+               spa.success = results$spa.success))
 }
 
 
@@ -186,8 +188,8 @@ spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' Y_on_Z_fam <- "negative.binomial"
 #' score.test(data, X_on_Z_fam, Y_on_Z_fam)
 #'
-#' @return A named list with fields \code{test_stat} and \code{left_side_p_value},
-#' \code{right_side_p_value} and \code{both_side_p_value}.
+#' @return A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
+#' \code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value), and \code{NB.disp.param}..
 #'
 #' @export
 score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
