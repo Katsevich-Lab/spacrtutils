@@ -20,6 +20,8 @@ Imports:
     glmnet,
     dplyr,
     SNPknock
+Remotes:
+    Katsevich-Lab/spacrt
 Suggests:
     withr,
     sceptre,
