@@ -48,14 +48,35 @@ the backup method (GCM) was employed.
 dCRT based on GLMs for \code{X|Z} and \code{Y|Z}.
 }
 \examples{
+## Example 1
 n <- 50; p <- 4
 data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
-             Y = rbinom(n = n, size = 1, prob = 0.7),
+             Y = rpois(n = n, lambda = 1),
              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
 X_on_Z_fam <- "binomial"
-Y_on_Z_fam <- "binomial"
+Y_on_Z_fam <- "poisson"
+
 spaCRT_internal(data, X_on_Z_fam, Y_on_Z_fam,
                 fitting_X_on_Z = 'rf',
                 fitting_Y_on_Z = 'glm')
+
+## Example 2
+n <- 100; p <- 10
+data <- list(X = rbinom(n = n, size = 1, prob = 0.7),
+             Y = rbinom(n = n, size = 1, prob = 0.2),
+             Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+X_on_Z_fam <- "binomial"
+Y_on_Z_fam <- "binomial"
+
+dtrain <- xgboost::xgb.DMatrix(data = data$Z, label = data$Y)
+model.Y <- xgboost::xgboost(data = dtrain,
+                            objective = "binary:logistic",
+                            nrounds = 50, verbose = 0)
+predicted <- stats::predict(model.Y, newdata = data$Z)
+
+spaCRT_internal(data, X_on_Z_fam, Y_on_Z_fam,
+                fitting_X_on_Z = 'glm',
+                fitting_Y_on_Z = 'own',
+                fit_vals_Y_on_Z_own = predicted)
 
 }
