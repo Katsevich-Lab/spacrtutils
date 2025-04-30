@@ -48,11 +48,16 @@ GCM_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 
    test_stat <- results$test_stat
 
-   # return test statistic, GCM p-values, and related quantities
+   # compute p-values
+   p.left <- stats::pnorm(test_stat, lower.tail = TRUE)
+   p.right <- stats::pnorm(test_stat, lower.tail = FALSE)
+   p.both <- 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)
+
+   # return test statistic and GCM p-values
    return(list(test_stat = test_stat,
-               p.left = stats::pnorm(test_stat, lower.tail = TRUE),
-               p.right = stats::pnorm(test_stat, lower.tail = FALSE),
-               p.both = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE)))
+               p.left = p.left,
+               p.right = p.right,
+               p.both = p.both))
 }
 
 
@@ -103,7 +108,7 @@ dCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
    p.right <- 1 - p.left + 1/(B+1)
    p.both <- 2 * min(c(p.left, p.right))
 
-   # return test statistic, dCRT p-values, and related quantities
+   # return test statistic, dCRT p-values
    return(list(test_stat = test_stat,
                p.left = p.left,
                p.right = p.right,
@@ -126,15 +131,36 @@ dCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' .
 #'
 #' @examples
+#' ## Example 1
 #' n <- 50; p <- 4
 #' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
-#'              Y = rbinom(n = n, size = 1, prob = 0.7),
+#'              Y = rpois(n = n, lambda = 1),
 #'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
 #' X_on_Z_fam <- "binomial"
-#' Y_on_Z_fam <- "binomial"
+#' Y_on_Z_fam <- "poisson"
+#'
 #' spaCRT_internal(data, X_on_Z_fam, Y_on_Z_fam,
 #'                 fitting_X_on_Z = 'rf',
 #'                 fitting_Y_on_Z = 'glm')
+#'
+#' ## Example 2
+#' n <- 100; p <- 10
+#' data <- list(X = rbinom(n = n, size = 1, prob = 0.7),
+#'              Y = rbinom(n = n, size = 1, prob = 0.2),
+#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
+#' X_on_Z_fam <- "binomial"
+#' Y_on_Z_fam <- "binomial"
+#'
+#' dtrain <- xgboost::xgb.DMatrix(data = data$Z, label = data$Y)
+#' model.Y <- xgboost::xgboost(data = dtrain,
+#'                             objective = "binary:logistic",
+#'                             nrounds = 50, verbose = 0)
+#' predicted <- stats::predict(model.Y, newdata = data$Z)
+#'
+#' spaCRT_internal(data, X_on_Z_fam, Y_on_Z_fam,
+#'                 fitting_X_on_Z = 'glm',
+#'                 fitting_Y_on_Z = 'own',
+#'                 fit_vals_Y_on_Z_own = predicted)
 #'
 #' @export
 spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
@@ -157,6 +183,7 @@ spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
    p.right <- 1 - p.left
    p.both <- 2 * min(c(p.left, p.right))
 
+   # return test statistic, spaCRT p-values, and spa.success
    return(list(test_stat = test_stat,
                p.left = p.left,
                p.right = p.right,
