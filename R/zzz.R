@@ -9,9 +9,6 @@
 
    # Dynamically retrieve the unexported functions from the spacrt namespace
    if (requireNamespace("spacrt", quietly = TRUE)) {
-      estimate_theta <- get("estimate_theta", envir = asNamespace("spacrt"))
-      assign("estimate_theta", estimate_theta, envir = ns)
-
       spa_cdf <- get("spa_cdf", envir = asNamespace("spacrt"))
       assign("spa_cdf", spa_cdf, envir = ns)
 
