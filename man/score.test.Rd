@@ -7,15 +7,15 @@
 score.test(data, X_on_Z_fam, Y_on_Z_fam)
 }
 \arguments{
-\item{X}{Numeric vector of length \eqn{n}, representing the predictor variable.}
+\item{data}{A (non-empty) named list with fields \code{X} (an nx1 vector for the predictor
+variable of interest), \code{Y} (an nx1 response vector), and \code{Z} (an nxp matrix
+of covariates).}
 
-\item{Y}{Numeric vector of length \eqn{n}, representing the response variable.}
+\item{X_on_Z_fam}{The GLM family for the regression of X on Z (values can be \code{binomial},
+\code{poisson}, etc).}
 
-\item{Z}{Numeric matrix with \eqn{n} rows and \eqn{p} columns, representing covariates.}
-
-\item{family}{Named list with elements \code{XZ} and \code{YZ} specifying the model family for \eqn{X \mid Z} and
-\eqn{Y \mid Z} for each model. Each list element must be a string (e.g. \code{"binomial"},
-\code{"poisson"}).}
+\item{Y_on_Z_fam}{The GLM family for the regression of Y on Z (values can be \code{binomial},
+\code{poisson}, \code{negative.binomial}, etc).}
 }
 \value{
 A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),

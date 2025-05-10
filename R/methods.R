@@ -236,16 +236,16 @@ spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' \code{score.test} is a function carrying out the score test based on GLMs for
 #' `X|Z` and `Y|Z`.
 #'
-#' @param X
-#'   Numeric vector of length \eqn{n}, representing the predictor variable.
-#' @param Y
-#'   Numeric vector of length \eqn{n}, representing the response variable.
-#' @param Z
-#'   Numeric matrix with \eqn{n} rows and \eqn{p} columns, representing covariates.
-#' @param family
-#'   Named list with elements `XZ` and `YZ` specifying the model family for \eqn{X \mid Z} and
-#'   \eqn{Y \mid Z} for each model. Each list element must be a string (e.g. `"binomial"`,
-#'   `"poisson"`).
+#' @param data
+#'    A (non-empty) named list with fields \code{X} (an nx1 vector for the predictor
+#'    variable of interest), \code{Y} (an nx1 response vector), and \code{Z} (an nxp matrix
+#'    of covariates).
+#' @param X_on_Z_fam
+#'    The GLM family for the regression of X on Z (values can be \code{binomial},
+#'    \code{poisson}, etc).
+#' @param Y_on_Z_fam
+#'    The GLM family for the regression of Y on Z (values can be \code{binomial},
+#'    \code{poisson}, \code{negative.binomial}, etc).
 #'
 #' @examples
 #' n <- 200; p <- 4
@@ -283,7 +283,7 @@ score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
          list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
       },
       error = function(e) {
-         aux_info_Y_on_Z <- nb_precomp(list(Y = Y, Z = Z))
+         aux_info_Y_on_Z <- nb_precomp(Y,Z)
 
          Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                                                    family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
@@ -293,7 +293,7 @@ score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
          list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
       })
    }else if(Y_on_Z_fam == 'poisson'){
-      aux_info_Y_on_Z <- nb_precomp(list(Y = Y, Z = Z))
+      aux_info_Y_on_Z <- nb_precomp(Y,Z)
 
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
                                                 family = stats::poisson(),
