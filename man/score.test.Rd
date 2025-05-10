@@ -4,7 +4,7 @@
 \alias{score.test}
 \title{Score Test}
 \usage{
-score.test(X, Y, Z, family)
+score.test(data, X_on_Z_fam, Y_on_Z_fam)
 }
 \arguments{
 \item{X}{Numeric vector of length \eqn{n}, representing the predictor variable.}
@@ -32,9 +32,10 @@ set.seed(1234)
 X <- rbinom(n = n, size = 1, prob = 0.3)
 Y <- rpois(n = n, lambda = 1)
 Z <- matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p)
+data <- list(X = X, Y = Y, Z = Z)
 
-res.score.1 <- score.test(X = X, Y = Y, Z = Z,
-                          family = list(XZ = "binomial", YZ = "negative.binomial"))
+res.score.1 <- score.test(data,
+                          X_on_Z_fam = "binomial", Y_on_Z_fam = "negative.binomial")
 res.score.1
 
 }
