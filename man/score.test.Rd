@@ -4,18 +4,18 @@
 \alias{score.test}
 \title{Score Test}
 \usage{
-score.test(data, X_on_Z_fam, Y_on_Z_fam)
+score.test(X, Y, Z, family)
 }
 \arguments{
-\item{data}{A named list with fields \code{X} (an nx1 vector for the predictor
-variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
-(an nxp matrix of covariates).}
+\item{X}{Numeric vector of length \eqn{n}, representing the predictor variable.}
 
-\item{X_on_Z_fam}{The GLM family for the regression of X on Z
-(values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).}
+\item{Y}{Numeric vector of length \eqn{n}, representing the response variable.}
 
-\item{Y_on_Z_fam}{The GLM family for the regression of Y on Z
-(values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).}
+\item{Z}{Numeric matrix with \eqn{n} rows and \eqn{p} columns, representing covariates.}
+
+\item{family}{Named list with elements \code{XZ} and \code{YZ} specifying the model family for \eqn{X \mid Z} and
+\eqn{Y \mid Z} for each model. Each list element must be a string (e.g. \code{"binomial"},
+\code{"poisson"}).}
 }
 \value{
 A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
@@ -23,16 +23,18 @@ A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
 \code{NB.disp.param}.
 }
 \description{
-\code{score.test} is a function carrying out the saddlepoint approximation to the
-dCRT based on GLMs for \code{X|Z} and \code{Y|Z}.
+\code{score.test} is a function carrying out the score test based on GLMs for
+\code{X|Z} and \code{Y|Z}.
 }
 \examples{
-n <- 50; p <- 2; normalize <- FALSE; return_cdf <- FALSE
-data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
-             Y = rpois(n = n, lambda = 1),
-             Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
-X_on_Z_fam <- "binomial"
-Y_on_Z_fam <- "negative.binomial"
-score.test(data, X_on_Z_fam, Y_on_Z_fam)
+n <- 200; p <- 4
+set.seed(1234)
+X <- rbinom(n = n, size = 1, prob = 0.3)
+Y <- rpois(n = n, lambda = 1)
+Z <- matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p)
+
+res.score.1 <- score.test(X = X, Y = Y, Z = Z,
+                          family = list(XZ = "binomial", YZ = "negative.binomial"))
+res.score.1
 
 }

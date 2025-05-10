@@ -3,48 +3,61 @@
 #'
 #' \code{GCM_internal} is a function carrying out the GCM test based on GLMs for `X|Z` and `Y|Z`.
 #'
-#' @param data A (non-empty) named list with fields \code{X} (an nx1 vector for the predictor
-#' variable of interest), \code{Y} (an nx1 response vector), and \code{Z} (an nxp matrix of covariates).
-#' @param X_on_Z_fam The GLM family for the regression of X on Z
-#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, \code{negative.binomial}, etc).
-#' @param Y_on_Z_fam The GLM family for the regression of Y on Z
-#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, \code{negative.binomial}, etc).
-#' @param fitting_X_on_Z The fitting method for the regression X on Z
-#' (values can be \code{glm} (default), \code{rf}, \code{prob_forest}, or \code{own}).
-#' @param fitting_Y_on_Z The fitting method for the regression Y on Z
-#' (values can be \code{glm} (default), \code{rf}, \code{prob_forest}, or \code{own}).
-#' @param fit_vals_X_on_Z_own Vector of fitted values for X on Z in case the user's custom method.
-#' Works only if fitting_X_on_Z = 'own'.
-#' @param fit_vals_Y_on_Z_own Vector of fitted values for Y on Z in case the user's custom method.
-#' Works only if fitting_Y_on_Z = 'own'.
+#' @param X
+#'   Numeric vector of length \eqn{n}, representing the predictor variable.
+#' @param Y
+#'   Numeric vector of length \eqn{n}, representing the response variable.
+#' @param Z
+#'   Numeric matrix with \eqn{n} rows and \eqn{p} columns, representing covariates.
+#' @param family
+#'   Named list with elements `XZ` and `YZ` specifying the model family for \eqn{X \mid Z} and
+#'   \eqn{Y \mid Z} for each model. Each list element must be a string (e.g. `"binomial"`,
+#'   `"poisson"`). Ignored for any model where you supply your own fitted values via `fitted`.
+#' @param method
+#'   Named list with elements `XZ` and `YZ` that selects the model-fitting method to use
+#'   for each model. Each element must be a string (e.g. `"glm"`, `"random_forest"`).
+#'   Ignored for any model where you supply your own fitted values via `fitted`.
+#' @param fitted
+#'   Named list with elements `XZ` and `YZ` of user-supplied fitted values
+#'   (numeric vectors of length n). For each non-NULL element, that model is
+#'   treated as custom and neither `method` nor `family` is used.
 #'
 #' @return A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
 #' \code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value).
 #'
 #' @examples
-#' n <- 20; p <- 2
-#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
-#'              Y = rpois(n = n, lambda = 1),
-#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
-#' X_on_Z_fam <- "binomial"
-#' Y_on_Z_fam <- "poisson"
-#' GCM_internal(data, X_on_Z_fam, Y_on_Z_fam,
-#'              fitting_X_on_Z = 'rf',
-#'              fitting_Y_on_Z = 'glm')
+#' n <- 200; p <- 4
+#' set.seed(1234)
+#' X <- rbinom(n = n, size = 1, prob = 0.3)
+#' Y <- rpois(n = n, lambda = 1)
+#' Z <- matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p)
+#'
+#' # fit both models via GLM
+#' res.GCM.1 <- GCM_internal(X = X, Y = Y, Z = Z,
+#'                           family = list(XZ = "binomial", YZ = "poisson"),
+#'                           method = list(XZ = "glm", YZ = "glm"))
+#' res.GCM.1
+#'
+#' # custom fit for Y|Z, explicit method/family only for X|Z
+#' user_fit_Y <- glm(Y ~ Z,
+#'                   family = poisson(),
+#'                   data = data.frame(Y = Y, Z = Z))$fitted.values |> unname()
+#'
+#' res.GCM.2 <- GCM_internal(X = X, Y = Y, Z = Z,
+#'                           family = list(XZ = "binomial"),
+#'                           method = list(XZ = "random_forest"),
+#'                           fitted = list(XZ = NULL, YZ = user_fit_Y))
+#' res.GCM.2
 #'
 #' @export
-GCM_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
-                         fitting_X_on_Z = 'glm',
-                         fitting_Y_on_Z = 'glm',
-                         fit_vals_X_on_Z_own = NULL,
-                         fit_vals_Y_on_Z_own = NULL){
+GCM_internal <- function(X, Y, Z,
+                         family,
+                         method,
+                         fitted = list(XZ = NULL, YZ = NULL)){
 
-   results <- spacrt::GCM(data, X_on_Z_fam, Y_on_Z_fam,
-                          fitting_X_on_Z = 'glm',
-                          fitting_Y_on_Z = 'glm',
-                          fit_vals_X_on_Z_own = NULL,
-                          fit_vals_Y_on_Z_own = NULL,
-                          alternative = 'less')
+   results <- spacrt::GCM(X = X, Y = Y, Z = Z,
+                          family, method, fitted,
+                          alternative = "less")
 
    test_stat <- results$test_stat
 
@@ -74,30 +87,39 @@ GCM_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' \code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value).
 #'
 #' @examples
-#' n <- 80; p <- 2
-#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
-#'              Y = rpois(n = n, lambda = 1),
-#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
-#' X_on_Z_fam <- "binomial"
-#' Y_on_Z_fam <- "poisson"
-#' dCRT_internal(data, X_on_Z_fam, Y_on_Z_fam,
-#'               fitting_X_on_Z = 'rf',
-#'               fitting_Y_on_Z = 'glm',
-#'               B = 2000)
+#' n <- 200; p <- 4
+#' set.seed(1234)
+#' X <- rbinom(n = n, size = 1, prob = 0.3)
+#' Y <- rpois(n = n, lambda = 1)
+#' Z <- matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p)
+#'
+#' # fit both models via GLM
+#' res.dCRT.1 <- dCRT_internal(X = X, Y = Y, Z = Z,
+#'                             family = list(XZ = "binomial", YZ = "poisson"),
+#'                             method = list(XZ = "glm", YZ = "glm"))
+#' res.dCRT.1
+#'
+#' # custom fit for Y|Z, explicit method/family only for X|Z
+#' user_fit_Y <- glm(Y ~ Z,
+#'                   family = poisson(),
+#'                   data = data.frame(Y = Y, Z = Z))$fitted.values |> unname()
+#'
+#' res.dCRT.2 <- dCRT_internal(X = X, Y = Y, Z = Z,
+#'                             family = list(XZ = "binomial"),
+#'                             method = list(XZ = "random_forest"),
+#'                             fitted = list(XZ = NULL, YZ = user_fit_Y),
+#'                             B = 10000)
+#' res.dCRT.2
 #'
 #' @export
-dCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
-                          fitting_X_on_Z = 'glm',
-                          fitting_Y_on_Z = 'glm',
-                          fit_vals_X_on_Z_own = NULL,
-                          fit_vals_Y_on_Z_own = NULL,
-                          B = 2000) {
+dCRT_internal <- function(X, Y, Z,
+                          family,
+                          method,
+                          fitted = list(XZ = NULL, YZ = NULL),
+                          B = 5000) {
 
-   results <- spacrt::dCRT(data, X_on_Z_fam, Y_on_Z_fam,
-                           fitting_X_on_Z = 'glm',
-                           fitting_Y_on_Z = 'glm',
-                           fit_vals_X_on_Z_own = NULL,
-                           fit_vals_Y_on_Z_own = NULL,
+   results <- spacrt::dCRT(X = X, Y = Y, Z = Z,
+                           family, method, fitted,
                            alternative = 'less',
                            B = B)
 
@@ -131,50 +153,40 @@ dCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #' .
 #'
 #' @examples
-#' ## Example 1
-#' n <- 50; p <- 4
-#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
-#'              Y = rpois(n = n, lambda = 1),
-#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
-#' X_on_Z_fam <- "binomial"
-#' Y_on_Z_fam <- "poisson"
+#' n <- 200; p <- 4
+#' set.seed(1234)
+#' X <- rbinom(n = n, size = 1, prob = 0.3)
+#' Y <- rpois(n = n, lambda = 1)
+#' Z <- matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p)
 #'
-#' spaCRT_internal(data, X_on_Z_fam, Y_on_Z_fam,
-#'                 fitting_X_on_Z = 'rf',
-#'                 fitting_Y_on_Z = 'glm')
+#' # fit both models via GLM
+#' res.spaCRT.1 <- spaCRT_internal(X = X, Y = Y, Z = Z,
+#'                                 family = list(XZ = "binomial", YZ = "poisson"),
+#'                                 method = list(XZ = "glm", YZ = "glm"))
+#' res.spaCRT.1
 #'
-#' ## Example 2
-#' n <- 100; p <- 10
-#' data <- list(X = rbinom(n = n, size = 1, prob = 0.7),
-#'              Y = rbinom(n = n, size = 1, prob = 0.2),
-#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
-#' X_on_Z_fam <- "binomial"
-#' Y_on_Z_fam <- "binomial"
-#'
-#' dtrain <- xgboost::xgb.DMatrix(data = data$Z, label = data$Y)
+#' # custom fit for Y|Z, explicit method/family only for X|Z
+#' dtrain <- xgboost::xgb.DMatrix(data = Z, label = Y)
 #' model.Y <- xgboost::xgboost(data = dtrain,
-#'                             objective = "binary:logistic",
-#'                             nrounds = 50, verbose = 0)
-#' predicted <- stats::predict(model.Y, newdata = data$Z)
+#'                             objective = "count:poisson",
+#'                             nrounds = 100, verbose = 0)
+#' user_fit_Y <- stats::predict(model.Y, newdata = Z)
 #'
-#' spaCRT_internal(data, X_on_Z_fam, Y_on_Z_fam,
-#'                 fitting_X_on_Z = 'glm',
-#'                 fitting_Y_on_Z = 'own',
-#'                 fit_vals_Y_on_Z_own = predicted)
+#' res.spaCRT.2 <- spaCRT_internal(X = X, Y = Y, Z = Z,
+#'                                 family = list(XZ = "binomial"),
+#'                                 method = list(XZ = "random_forest"),
+#'                                 fitted = list(XZ = NULL, YZ = user_fit_Y))
+#' res.spaCRT.2
 #'
 #' @export
-spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
-                            fitting_X_on_Z = 'glm',
-                            fitting_Y_on_Z = 'glm',
-                            fit_vals_X_on_Z_own = NULL,
-                            fit_vals_Y_on_Z_own = NULL) {
+spaCRT_internal <- function(X, Y, Z,
+                            family,
+                            method,
+                            fitted = list(XZ = NULL, YZ = NULL)) {
 
-   results <- spacrt::spaCRT(data, X_on_Z_fam, Y_on_Z_fam,
-                             fitting_X_on_Z = 'glm',
-                             fitting_Y_on_Z = 'glm',
-                             fit_vals_X_on_Z_own = NULL,
-                             fit_vals_Y_on_Z_own = NULL,
-                             alternative = 'less')
+   results <- spacrt::spaCRT(X = X, Y = Y, Z = Z,
+                             family, method, fitted,
+                             alternative = "less")
 
    test_stat <- results$test_stat
 
@@ -195,36 +207,43 @@ spaCRT_internal <- function(data, X_on_Z_fam, Y_on_Z_fam,
 #####################################################################################
 #' Score Test
 #'
-#' \code{score.test} is a function carrying out the saddlepoint approximation to the
-#' dCRT based on GLMs for `X|Z` and `Y|Z`.
+#' \code{score.test} is a function carrying out the score test based on GLMs for
+#' `X|Z` and `Y|Z`.
 #'
-#' @param data A named list with fields \code{X} (an nx1 vector for the predictor
-#' variable of interest), \code{Y} (an nx1 response vector), and \code{Z}
-#' (an nxp matrix of covariates).
-#' @param X_on_Z_fam The GLM family for the regression of X on Z
-#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
-#' @param Y_on_Z_fam The GLM family for the regression of Y on Z
-#' (values can be \code{gaussian}, \code{binomial}, \code{poisson}, etc).
+#' @param X
+#'   Numeric vector of length \eqn{n}, representing the predictor variable.
+#' @param Y
+#'   Numeric vector of length \eqn{n}, representing the response variable.
+#' @param Z
+#'   Numeric matrix with \eqn{n} rows and \eqn{p} columns, representing covariates.
+#' @param family
+#'   Named list with elements `XZ` and `YZ` specifying the model family for \eqn{X \mid Z} and
+#'   \eqn{Y \mid Z} for each model. Each list element must be a string (e.g. `"binomial"`,
+#'   `"poisson"`).
 #'
 #' @examples
-#' n <- 50; p <- 2; normalize <- FALSE; return_cdf <- FALSE
-#' data <- list(X = rbinom(n = n, size = 1, prob = 0.2),
-#'              Y = rpois(n = n, lambda = 1),
-#'              Z = matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p))
-#' X_on_Z_fam <- "binomial"
-#' Y_on_Z_fam <- "negative.binomial"
-#' score.test(data, X_on_Z_fam, Y_on_Z_fam)
+#' n <- 200; p <- 4
+#' set.seed(1234)
+#' X <- rbinom(n = n, size = 1, prob = 0.3)
+#' Y <- rpois(n = n, lambda = 1)
+#' Z <- matrix(rnorm(n = n*p, mean = 0, sd = 1), nrow = n, ncol = p)
+#'
+#' res.score.1 <- score.test(X = X, Y = Y, Z = Z,
+#'                           family = list(XZ = "binomial", YZ = "negative.binomial"))
+#' res.score.1
 #'
 #' @return A named list with fields \code{test_stat}, \code{p.left} (Left-sided p-value),
 #' \code{p.right} (Right-sided p-value), \code{p.both} (Two-sided p-value), and
 #' \code{NB.disp.param}.
 #'
 #' @export
-score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
+score.test <- function(X, Y, Z,
+                       family){
 
    # extract (X,Y,Z) from inputted data
-   X <- data$X; Y <- data$Y; Z <- data$Z
    n <- length(X)
+
+   X_on_Z_fam <- family$XZ; Y_on_Z_fam <- family$YZ
 
    # fit X on Z regression
    X_on_Z_fit <- suppressWarnings(stats::glm(X ~ Z, family = X_on_Z_fam))
@@ -232,7 +251,7 @@ score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
    # fit Y on Z regression
    if(Y_on_Z_fam == "negative.binomial"){
       # First try to fit the model using glm.nb
-      temp.result <- tryCatch({
+      temp.res <- tryCatch({
          Y_on_Z_fit <- suppressWarnings(MASS::glm.nb(Y ~ Z))
          NB.disp.param <- Y_on_Z_fit$theta
          list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
@@ -255,22 +274,22 @@ score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
                                                 mustart = aux_info_Y_on_Z$fitted_values))
       NB.disp.param <- NA
 
-      temp.result <- list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
+      temp.res <- list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
    }else{
       Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z, family = Y_on_Z_fam))
       NB.disp.param <- NA
 
-      temp.result <- list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
+      temp.res <- list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
    }
 
    # perform score test
-   test_stat <- statmod::glm.scoretest(fit = temp.result$Y_on_Z_fit, x2 = X)
+   test_stat <- statmod::glm.scoretest(fit = temp.res$Y_on_Z_fit, x2 = X)
 
    # return test statistic, score test p-values, and related quantities
    return(list(test_stat = test_stat,
                p.left = stats::pnorm(test_stat, lower.tail = TRUE),
                p.right = stats::pnorm(test_stat, lower.tail = FALSE),
                p.both = 2*stats::pnorm(abs(test_stat), lower.tail = FALSE),
-               NB.disp.param = temp.result$NB.disp.param))
+               NB.disp.param = temp.res$NB.disp.param))
 }
 
