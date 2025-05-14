@@ -400,8 +400,7 @@ spaCRT_HMM <- function(data){
                                            X_on_Z_fit_vals = conditional_mean[, j],
                                            Y_on_Z_fit_vals = leave_one_fit[, j],
                                            fam = "binomial",
-                                           R = 5,
-                                           max_expansions = 10))
+                                           R = 5))
       })
 
       # list to be saved
