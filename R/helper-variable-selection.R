@@ -395,13 +395,13 @@ spaCRT_HMM <- function(data){
 
       # pass the argument to spa_cdf in spacrt package
       p_values_output <- sapply(1:p, function(j){
-         suppressWarnings(spa_cdf(X = X[, j],
-                                          Y = Y,
-                                          X_on_Z_fit_vals = conditional_mean[, j],
-                                          Y_on_Z_fit_vals = leave_one_fit[, j],
-                                          fam = "binomial",
-                                          R = 5,
-                                          max_expansions = 10))
+         suppressWarnings(spacrt:::spa_cdf(X = X[, j],
+                                           Y = Y,
+                                           X_on_Z_fit_vals = conditional_mean[, j],
+                                           Y_on_Z_fit_vals = leave_one_fit[, j],
+                                           fam = "binomial",
+                                           R = 5,
+                                           max_expansions = 10))
       })
 
       # list to be saved
@@ -412,7 +412,7 @@ spaCRT_HMM <- function(data){
          left_pvalue = sapply(1:p, function(j) p_values_output[, j]$p.left),
          right_pvalue = sapply(1:p, function(j) p_values_output[, j]$p.right),
          both_pvalue = sapply(1:p, function(j) p_values_output[, j]$p.both),
-         GCM_default = sapply(1:p, function(j) p_values_output[, j]$gcm.default)
+         GCM_default = sapply(1:p, function(j) !p_values_output[, j]$spa.success)
       )
    }
 
