@@ -285,9 +285,21 @@ score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
       error = function(e) {
          aux_info_Y_on_Z <- nb_precomp(Y,Z)
 
-         Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                                   family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                                   mustart = aux_info_Y_on_Z$fitted_values))
+         # switch to Poisson if negative binomial regression fails
+         tryCatch({
+            # fit NB regression
+            Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                                      family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                                      mustart = aux_info_Y_on_Z$fitted_values))
+         },
+         error = function(e){
+            # fit Poisson regression
+            Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                                      family = stats::poisson(),
+                                                      mustart = aux_info_Y_on_Z$fitted_values))
+            Y_on_Z_fit$family <- MASS::negative.binomial(aux_info_Y_on_Z$theta_hat)
+         })
+
          NB.disp.param <- aux_info_Y_on_Z$theta_hat
 
          list(Y_on_Z_fit = Y_on_Z_fit, NB.disp.param = NB.disp.param)
