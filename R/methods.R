@@ -286,18 +286,17 @@ score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
          aux_info_Y_on_Z <- nb_precomp(Y,Z)
 
          # switch to Poisson if negative binomial regression fails
-         tryCatch({
-            # fit NB regression
-            Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                                      family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
-                                                      mustart = aux_info_Y_on_Z$fitted_values))
+         Y_on_Z_fit <- tryCatch({
+            suppressWarnings(stats::glm(Y ~ Z,
+                                        family = MASS::negative.binomial(aux_info_Y_on_Z$theta_hat),
+                                        mustart = aux_info_Y_on_Z$fitted_values))
          },
-         error = function(e){
-            # fit Poisson regression
-            Y_on_Z_fit <- suppressWarnings(stats::glm(Y ~ Z,
-                                                      family = stats::poisson(),
-                                                      mustart = aux_info_Y_on_Z$fitted_values))
-            Y_on_Z_fit$family <- MASS::negative.binomial(aux_info_Y_on_Z$theta_hat)
+         error = function(e) {
+            fit <- suppressWarnings(stats::glm(Y ~ Z,
+                                               family = stats::poisson(),
+                                               mustart = aux_info_Y_on_Z$fitted_values))
+            fit$family <- MASS::negative.binomial(aux_info_Y_on_Z$theta_hat)
+            fit
          })
 
          NB.disp.param <- aux_info_Y_on_Z$theta_hat
