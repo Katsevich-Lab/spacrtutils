@@ -330,3 +330,169 @@ score.test <- function(data, X_on_Z_fam, Y_on_Z_fam){
                NB.disp.param = temp.res$NB.disp.param))
 }
 
+
+#####################################################################################
+#' SAIGE-Bernoulli randomize-X saddlepoint test
+#'
+#' \code{SAIGE_Bern_internal} carries out the unified-vision SAIGE variant that
+#' randomizes \code{X} from a logistic \code{X|Z} fit and residualizes \code{Y}
+#' linearly on \code{Z} via GLS with weights \eqn{W = \hat\mu_x (1 - \hat\mu_x)}
+#' (the Bernoulli conditional variance, i.e. the X-model IRLS metric of
+#' Section 3 of the gls-validity note). Lugannani-Rice is applied to the
+#' Bernoulli CGF on weights \eqn{a_i = Y_i - Z_d \hat\gamma_y}.
+#'
+#' This is the canonical "SAIGE in the unified randomize-X framework" when
+#' \code{X} is binary: the observed statistic is invariant to the linear
+#' Y-fit (Section 3, Proposition 1), and the SPA reference variance matches
+#' the sampling variance under the logistic-GLM score equation. The Y outcome
+#' need not be binary -- it enters only as a fixed weight.
+#'
+#' @param data
+#'    A (non-empty) named list with fields \code{X} (an nx1 binary vector),
+#'    \code{Y} (an nx1 response vector, possibly count), and \code{Z} (an nxp
+#'    matrix of covariates).
+#' @param fitting_X_on_Z
+#'    Fitting method for the logistic X|Z model. Currently \code{"glm"} (default).
+#' @param fit_vals_X_on_Z_own
+#'    Optional vector of user-supplied fitted values \eqn{\hat\mu_x} (e.g. from
+#'    a GAM or random forest). If supplied, \code{fitting_X_on_Z} is ignored.
+#'
+#' @return A named list with fields \code{test_stat}, \code{p.left}
+#' (left-sided p-value), \code{p.right} (right-sided p-value), and \code{p.both}
+#' (two-sided p-value).
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 1000
+#' Z <- matrix(stats::rnorm(2 * n), n, 2)
+#' X <- stats::rbinom(n, 1, plogis(-3 + Z[, 1] + Z[, 2]))
+#' Y <- MASS::rnegbin(n, mu = exp(-2 + 0.5 * Z[, 1] + 0.5 * Z[, 2]), theta = 0.5)
+#' res <- SAIGE_Bern_internal(list(X = X, Y = Y, Z = Z))
+#' res
+#'
+#' @export
+SAIGE_Bern_internal <- function(data,
+                                fitting_X_on_Z = "glm",
+                                fit_vals_X_on_Z_own = NULL) {
+
+   if (is.null(fit_vals_X_on_Z_own) && !identical(fitting_X_on_Z, "glm")) {
+      stop("Unsupported fitting_X_on_Z: ", fitting_X_on_Z,
+           ". Supply fit_vals_X_on_Z_own instead.")
+   }
+
+   X <- data$X; Y <- data$Y; Z <- data$Z
+
+   res <- tryCatch(withCallingHandlers({
+      if (!is.null(fit_vals_X_on_Z_own)) {
+         mu_x <- as.numeric(fit_vals_X_on_Z_own)
+      } else {
+         fit_x <- suppressWarnings(stats::glm(X ~ Z, family = stats::binomial()))
+         mu_x  <- as.numeric(stats::fitted(fit_x))
+      }
+
+      Omega   <- mu_x * (1 - mu_x)
+      Zd      <- cbind(1, Z)
+      WZ      <- Zd * Omega
+      gamma_y <- solve(crossprod(Zd, WZ), crossprod(WZ, Y))
+      mu_y    <- as.numeric(Zd %*% gamma_y)
+      a       <- Y - mu_y
+      T_      <- sum(a * (X - mu_x))
+      p       <- .bin_spa_pvalues(w = a, mu = mu_x, S_obs = T_)
+      list(test_stat = T_, p.left = p$p.left, p.right = p$p.right,
+           p.both = 2 * min(p$p.left, p$p.right))
+   }, warning = function(w) invokeRestart("muffleWarning")),
+   error = function(e) list(test_stat = NA_real_, p.left = NA_real_,
+                            p.right = NA_real_, p.both = NA_real_))
+   res
+}
+
+
+#####################################################################################
+#' SAIGE-NB randomize-X saddlepoint test
+#'
+#' \code{SAIGE_NB_internal} models \code{X|Z} as negative binomial and
+#' randomizes \eqn{\tilde X_i \sim \mathrm{NegBin}(\hat\mu_{x,i}, \hat r)} for
+#' the SPA reference. \code{Y} is residualized linearly on \code{Z} via GLS
+#' with weights \eqn{W = \hat\mu_x + \hat\mu_x^2 / \hat r}, the
+#' \strong{NB conditional variance of \code{X|Z}}. Lugannani-Rice is applied
+#' to the NB CGF on weights \eqn{a_i = Y_i - Z_d \hat\gamma_y}.
+#'
+#' This is the NB analog of \code{\link{SAIGE_Bern_internal}}: same
+#' randomize-X / linear-GLS-Y / SPA architecture, with the Bernoulli law for
+#' \code{X|Z} replaced by NB and the GLS metric upgraded from
+#' \eqn{\hat\mu_x(1-\hat\mu_x)} to \eqn{\hat\mu_x + \hat\mu_x^2/\hat r}.
+#' Like the other randomize-X methods (\code{\link{spaCRT_internal}},
+#' \code{\link{SAIGE_Bern_internal}}), only \code{X|Z}-side parameters are
+#' exposed; \code{Y} enters as a fixed weight.
+#'
+#' @param data
+#'    A (non-empty) named list with fields \code{X} (an nx1 count vector),
+#'    \code{Y} (an nx1 response vector), and \code{Z} (an nxp matrix of
+#'    covariates).
+#' @param fitting_X_on_Z
+#'    Fitting method for the NB X|Z model. Currently \code{"glm"} (default),
+#'    via \code{MASS::glm.nb}.
+#' @param fit_vals_X_on_Z_own
+#'    Optional vector of user-supplied fitted values \eqn{\hat\mu_x}. If
+#'    supplied, \code{size_hat_own} must also be supplied.
+#' @param size_hat_own
+#'    Optional scalar with the NB dispersion / size estimate \eqn{\hat r} for
+#'    the X|Z model. Required when \code{fit_vals_X_on_Z_own} is supplied.
+#'
+#' @return A named list with fields \code{test_stat}, \code{p.left}, \code{p.right},
+#' \code{p.both}, and \code{NB.disp.param} (the NB \eqn{\hat r} used).
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 1000
+#' Z <- matrix(stats::rnorm(2 * n), n, 2)
+#' X <- MASS::rnegbin(n, mu = exp(-1 + Z[, 1] + Z[, 2]), theta = 5)
+#' Y <- stats::rbinom(n, 1, plogis(-3 + Z[, 1] + Z[, 2]))
+#' res <- SAIGE_NB_internal(list(X = X, Y = Y, Z = Z))
+#' res
+#'
+#' @export
+SAIGE_NB_internal <- function(data,
+                              fitting_X_on_Z = "glm",
+                              fit_vals_X_on_Z_own = NULL,
+                              size_hat_own = NULL) {
+
+   # argument validation (loud, outside the numerical tryCatch)
+   if (!is.null(fit_vals_X_on_Z_own) && is.null(size_hat_own)) {
+      stop("size_hat_own must be supplied when fit_vals_X_on_Z_own is given.")
+   }
+   if (is.null(fit_vals_X_on_Z_own) && !identical(fitting_X_on_Z, "glm")) {
+      stop("Unsupported fitting_X_on_Z: ", fitting_X_on_Z,
+           ". Supply fit_vals_X_on_Z_own + size_hat_own instead.")
+   }
+
+   X <- data$X; Y <- data$Y; Z <- data$Z
+
+   res <- tryCatch(withCallingHandlers({
+      if (!is.null(fit_vals_X_on_Z_own)) {
+         mu_x     <- as.numeric(fit_vals_X_on_Z_own)
+         size_hat <- as.numeric(size_hat_own)
+      } else {
+         fit_x    <- suppressWarnings(MASS::glm.nb(X ~ Z))
+         mu_x     <- as.numeric(stats::fitted(fit_x))
+         size_hat <- fit_x$theta
+      }
+
+      Omega   <- mu_x + mu_x^2 / size_hat              # Var(X|Z), NB
+      Zd      <- cbind(1, Z)
+      WZ      <- Zd * Omega
+      gamma_y <- solve(crossprod(Zd, WZ), crossprod(WZ, Y))
+      mu_y    <- as.numeric(Zd %*% gamma_y)
+      a       <- Y - mu_y
+      T_      <- sum(a * (X - mu_x))
+      p       <- .nb_spa_pvalues(w = a, mu = mu_x, size_ = size_hat, S_obs = T_)
+      list(test_stat = T_, p.left = p$p.left, p.right = p$p.right,
+           p.both = 2 * min(p$p.left, p$p.right),
+           NB.disp.param = size_hat)
+   }, warning = function(w) invokeRestart("muffleWarning")),
+   error = function(e) list(test_stat = NA_real_, p.left = NA_real_,
+                            p.right = NA_real_, p.both = NA_real_,
+                            NB.disp.param = NA_real_))
+   res
+}
+
