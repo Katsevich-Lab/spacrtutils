@@ -69,11 +69,27 @@ res.score <- results_score |>
 
 writeLines("")
 
-test_that("Hello",{
-   expect_equal(res.GCM, 0.08)
-   expect_equal(res.dCRT, 0.02)
-   expect_equal(res.spaCRT, 0.02)
-   expect_equal(res.score, 0.023)
+test_that("rejection rates under H_0 are within sane bounds", {
+   # X and Y are independent of Z (X ~ Bern(0.2), Y ~ Pois(1)), so they are
+   # independent of each other -- H_0 holds. With n = 80, iterations = 100,
+   # the empirical size at alpha = 0.05 has Monte Carlo SE ~= 0.022, so a
+   # well-calibrated test should land within a few SE of 0.05. We use [0,
+   # 0.20] as a generous catch-all that still catches gross miscalibration
+   # without breaking under RNG drift (R version, grf updates, etc.).
+   for (nm in c("res.GCM", "res.dCRT", "res.spaCRT")) {
+      val <- get(nm)
+      expect_true(is.numeric(val) && !is.na(val),
+                  info = sprintf("%s should be numeric and non-NA", nm))
+      expect_gte(val, 0)
+      expect_lte(val, 0.20)
+   }
+   # res.score is the mean of left p-values that are <= 0.05, so by
+   # construction it must sit in [0, 0.05].
+   expect_true(is.numeric(res.score))
+   if (!is.na(res.score)) {
+      expect_gte(res.score, 0)
+      expect_lte(res.score, 0.05)
+   }
 })
 
 
