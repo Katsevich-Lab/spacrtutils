@@ -33,15 +33,24 @@ A named list with fields \code{test_stat}, \code{p.left}, \code{p.right},
 \code{SAIGE_NB_internal} models \code{X|Z} as negative binomial and
 randomizes \eqn{\tilde X_i \sim \mathrm{NegBin}(\hat\mu_{x,i}, \hat r)} for
 the SPA reference. \code{Y} is residualized linearly on \code{Z} via GLS
-with weights \eqn{W = \hat\mu_x + \hat\mu_x^2 / \hat r}, the
-\strong{NB conditional variance of \code{X|Z}}. Lugannani-Rice is applied
-to the NB CGF on weights \eqn{a_i = Y_i - Z_d \hat\gamma_y}.
+with weights \eqn{W = \hat\mu_x}, the score-direction weight
+\eqn{\partial\mu_x/\partial\eta} under the log link (also the Poisson
+conditional variance). Lugannani-Rice is applied to the NB CGF on weights
+\eqn{a_i = Y_i - Z_d \hat\gamma_y}, so the dispersion enters the reference
+but not the residualization metric.
 }
 \details{
 This is the NB analog of \code{\link{SAIGE_Bern_internal}}: same
 randomize-X / linear-GLS-Y / SPA architecture, with the Bernoulli law for
-\code{X|Z} replaced by NB and the GLS metric upgraded from
-\eqn{\hat\mu_x(1-\hat\mu_x)} to \eqn{\hat\mu_x + \hat\mu_x^2/\hat r}.
+\code{X|Z} replaced by NB. The GLS weight \eqn{W = \hat\mu_x} is the choice
+that gives the canonical-link-style exact-zero score equation at the GLS
+estimate (since \eqn{\nabla_\beta\mu_x = \hat\mu_x z} under log link),
+yielding an \eqn{O_P(n^{-1})} bias control regardless of how the implicit
+\code{Y|Z} linear projection relates to the truth. The NB conditional
+variance \eqn{\hat\mu_x + \hat\mu_x^2/\hat r} differs from
+\eqn{\partial\mu/\partial\eta} because the log link is non-canonical for
+NB; using it as the GLS weight would only give \eqn{O_P(n^{-1/2})} bias
+in general.
 Like the other randomize-X methods (\code{\link{spaCRT_internal}},
 \code{\link{SAIGE_Bern_internal}}), only \code{X|Z}-side parameters are
 exposed; \code{Y} enters as a fixed weight.
