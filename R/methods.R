@@ -513,3 +513,82 @@ SAIGE_NB_internal <- function(data,
    res
 }
 
+
+#####################################################################################
+#' SAIGE-NB randomize-X saddlepoint test (simple Poisson + Pearson-theta variant)
+#'
+#' Identical in structure to \code{\link{SAIGE_NB_internal}}, but the
+#' nuisance fit of \code{X|Z} uses the lightweight Poisson + Pearson-theta
+#' estimator \code{nb_precomp} from \pkg{spacrt} rather than the iterative
+#' alternating IRLS / profile-likelihood routine in \code{MASS::glm.nb}.
+#' Concretely \code{nb_precomp} fits a Poisson GLM of \code{X} on \code{Z}
+#' and then derives \eqn{\hat r} from the Pearson chi-square statistic of
+#' the Poisson fit. The Poisson fitted values play the role of
+#' \eqn{\hat\mu_x} (they are the MLE of the conditional mean under both
+#' Poisson and NB log-linear models), and \eqn{\hat r} is the
+#' method-of-moments NB dispersion. All downstream steps (NB-IRLS GLS
+#' projection of \code{Y} on \code{Z}, Fisher-information reweighting,
+#' Lugannani--Rice on the NB CGF) match \code{\link{SAIGE_NB_internal}}.
+#'
+#' This variant trades a small efficiency loss (Pearson-moments \eqn{\hat r}
+#' is slightly noisier than the NB MLE) for substantially faster fitting
+#' and no risk of \code{glm.nb} convergence pathologies.
+#'
+#' @inheritParams SAIGE_NB_internal
+#'
+#' @return A named list with the same fields as
+#' \code{\link{SAIGE_NB_internal}}.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 1000
+#' Z <- matrix(stats::rnorm(2 * n), n, 2)
+#' X <- MASS::rnegbin(n, mu = exp(-1 + Z[, 1] + Z[, 2]), theta = 5)
+#' Y <- stats::rbinom(n, 1, plogis(-3 + Z[, 1] + Z[, 2]))
+#' SAIGE_NB_simple_internal(list(X = X, Y = Y, Z = Z))
+#'
+#' @export
+SAIGE_NB_simple_internal <- function(data,
+                                     fitting_X_on_Z = "glm",
+                                     fit_vals_X_on_Z_own = NULL,
+                                     size_hat_own = NULL) {
+
+   if (!is.null(fit_vals_X_on_Z_own) && is.null(size_hat_own)) {
+      stop("size_hat_own must be supplied when fit_vals_X_on_Z_own is given.")
+   }
+   if (is.null(fit_vals_X_on_Z_own) && !identical(fitting_X_on_Z, "glm")) {
+      stop("Unsupported fitting_X_on_Z: ", fitting_X_on_Z,
+           ". Supply fit_vals_X_on_Z_own + size_hat_own instead.")
+   }
+
+   X <- data$X; Y <- data$Y; Z <- data$Z
+
+   res <- tryCatch(withCallingHandlers({
+      if (!is.null(fit_vals_X_on_Z_own)) {
+         mu_x     <- as.numeric(fit_vals_X_on_Z_own)
+         size_hat <- as.numeric(size_hat_own)
+      } else {
+         pre      <- nb_precomp(X, Z)
+         mu_x     <- as.numeric(pre$fitted_values)
+         size_hat <- as.numeric(pre$theta_hat)
+      }
+
+      info_w  <- 1 / (1 + mu_x / size_hat)
+      Omega   <- mu_x * info_w
+      Zd      <- cbind(1, Z)
+      WZ      <- Zd * Omega
+      gamma_y <- solve(crossprod(Zd, WZ), crossprod(WZ, Y))
+      mu_y    <- as.numeric(Zd %*% gamma_y)
+      a       <- (Y - mu_y) * info_w
+      T_      <- sum(a * (X - mu_x))
+      p       <- .nb_spa_pvalues(w = a, mu = mu_x, size_ = size_hat, S_obs = T_)
+      list(test_stat = T_, p.left = p$p.left, p.right = p$p.right,
+           p.both = 2 * min(p$p.left, p$p.right),
+           NB.disp.param = size_hat)
+   }, warning = function(w) invokeRestart("muffleWarning")),
+   error = function(e) list(test_stat = NA_real_, p.left = NA_real_,
+                            p.right = NA_real_, p.both = NA_real_,
+                            NB.disp.param = NA_real_))
+   res
+}
+
