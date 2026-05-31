@@ -33,26 +33,24 @@ A named list with fields \code{test_stat}, \code{p.left}, \code{p.right},
 \code{SAIGE_NB_internal} models \code{X|Z} as negative binomial and
 randomizes \eqn{\tilde X_i \sim \mathrm{NegBin}(\hat\mu_{x,i}, \hat r)} for
 the SPA reference. \code{Y} is residualized linearly on \code{Z} via GLS
-with weights \eqn{W = \hat\mu_x} (the score-direction weight under the log
-link). The test statistic is
-\deqn{T = \sum_i \frac{(Y_i - Z_d \hat\gamma_y)\,(X_i - \hat\mu_{x,i})}{1 + \hat\mu_{x,i}/\hat r},}
-i.e.\ the unweighted residual product reweighted observation-wise by the
-NB Fisher-information factor \eqn{1/(1+\mu/r) = r/(\mu+r) = \mu/V}, where
-\eqn{V = \mu + \mu^2/r} is the NB conditional variance. Lugannani-Rice
-is applied to the NB CGF with the same reweighted per-observation weights.
+with the NB-GLM IRLS Fisher-information weight
+\eqn{W = \hat\mu_x/(1+\hat\mu_x/\hat r) = \hat\mu_x^2/V}, where
+\eqn{V = \hat\mu_x + \hat\mu_x^2/\hat r} is the NB conditional variance.
+The same Fisher-information factor \eqn{1/(1+\hat\mu_x/\hat r) = \hat\mu_x/V}
+is applied per observation to the Y-residual, giving the test statistic
+\deqn{T = \sum_i \frac{(Y_i - Z_d \hat\gamma_y)\,(X_i - \hat\mu_{x,i})}{1 + \hat\mu_{x,i}/\hat r}.}
+Lugannani-Rice is applied to the NB CGF with the same reweighted weights.
 }
 \details{
-This is the NB analog of \code{\link{SAIGE_Bern_internal}}: same
-randomize-X / linear-GLS-Y / SPA architecture, with the Bernoulli law for
-\code{X|Z} replaced by NB. The Fisher-information reweighting makes the
-statistic the locally most powerful NB Rao score (with the SPA replacing
-the asymptotic normal reference): for Bernoulli+logit (canonical link)
-\eqn{\mu_x/V = 1} so the reweighting collapses and one recovers the
-unweighted residual product. The GLS step uses \eqn{W = \hat\mu_x} (the
-score-direction under log link) so that the GLS normal equation gives an
-exact-zero leading term in the bias decomposition, yielding
-\eqn{O_P(n^{-1})} bias regardless of how the implicit \code{Y|Z} linear
-projection relates to the truth.
+This is the NB analog of \code{\link{SAIGE_Bern_internal}}. By
+construction (X residualization in the NB Fisher-information metric, plus
+per-observation Fisher-information reweighting of the Y residual) the
+statistic and its SPA studentization are bit-for-bit the NB Rao score
+test of \code{glm.nb} (\code{statmod::glm.scoretest}) with the asymptotic
+\eqn{N(0,1)} reference replaced by the NB SPA. For Bernoulli+logit
+(canonical link) the Fisher-information factor collapses to \eqn{1}, and
+one recovers the unweighted residual product of
+\code{\link{SAIGE_Bern_internal}}.
 Like the other randomize-X methods (\code{\link{spaCRT_internal}},
 \code{\link{SAIGE_Bern_internal}}), only \code{X|Z}-side parameters are
 exposed; \code{Y} enters as a fixed weight.

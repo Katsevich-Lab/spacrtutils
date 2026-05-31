@@ -413,25 +413,23 @@ SAIGE_Bern_internal <- function(data,
 #' \code{SAIGE_NB_internal} models \code{X|Z} as negative binomial and
 #' randomizes \eqn{\tilde X_i \sim \mathrm{NegBin}(\hat\mu_{x,i}, \hat r)} for
 #' the SPA reference. \code{Y} is residualized linearly on \code{Z} via GLS
-#' with weights \eqn{W = \hat\mu_x} (the score-direction weight under the log
-#' link). The test statistic is
-#' \deqn{T = \sum_i \frac{(Y_i - Z_d \hat\gamma_y)\,(X_i - \hat\mu_{x,i})}{1 + \hat\mu_{x,i}/\hat r},}
-#' i.e.\ the unweighted residual product reweighted observation-wise by the
-#' NB Fisher-information factor \eqn{1/(1+\mu/r) = r/(\mu+r) = \mu/V}, where
-#' \eqn{V = \mu + \mu^2/r} is the NB conditional variance. Lugannani-Rice
-#' is applied to the NB CGF with the same reweighted per-observation weights.
+#' with the NB-GLM IRLS Fisher-information weight
+#' \eqn{W = \hat\mu_x/(1+\hat\mu_x/\hat r) = \hat\mu_x^2/V}, where
+#' \eqn{V = \hat\mu_x + \hat\mu_x^2/\hat r} is the NB conditional variance.
+#' The same Fisher-information factor \eqn{1/(1+\hat\mu_x/\hat r) = \hat\mu_x/V}
+#' is applied per observation to the Y-residual, giving the test statistic
+#' \deqn{T = \sum_i \frac{(Y_i - Z_d \hat\gamma_y)\,(X_i - \hat\mu_{x,i})}{1 + \hat\mu_{x,i}/\hat r}.}
+#' Lugannani-Rice is applied to the NB CGF with the same reweighted weights.
 #'
-#' This is the NB analog of \code{\link{SAIGE_Bern_internal}}: same
-#' randomize-X / linear-GLS-Y / SPA architecture, with the Bernoulli law for
-#' \code{X|Z} replaced by NB. The Fisher-information reweighting makes the
-#' statistic the locally most powerful NB Rao score (with the SPA replacing
-#' the asymptotic normal reference): for Bernoulli+logit (canonical link)
-#' \eqn{\mu_x/V = 1} so the reweighting collapses and one recovers the
-#' unweighted residual product. The GLS step uses \eqn{W = \hat\mu_x} (the
-#' score-direction under log link) so that the GLS normal equation gives an
-#' exact-zero leading term in the bias decomposition, yielding
-#' \eqn{O_P(n^{-1})} bias regardless of how the implicit \code{Y|Z} linear
-#' projection relates to the truth.
+#' This is the NB analog of \code{\link{SAIGE_Bern_internal}}. By
+#' construction (X residualization in the NB Fisher-information metric, plus
+#' per-observation Fisher-information reweighting of the Y residual) the
+#' statistic and its SPA studentization are bit-for-bit the NB Rao score
+#' test of \code{glm.nb} (\code{statmod::glm.scoretest}) with the asymptotic
+#' \eqn{N(0,1)} reference replaced by the NB SPA. For Bernoulli+logit
+#' (canonical link) the Fisher-information factor collapses to \eqn{1}, and
+#' one recovers the unweighted residual product of
+#' \code{\link{SAIGE_Bern_internal}}.
 #' Like the other randomize-X methods (\code{\link{spaCRT_internal}},
 #' \code{\link{SAIGE_Bern_internal}}), only \code{X|Z}-side parameters are
 #' exposed; \code{Y} enters as a fixed weight.
@@ -489,15 +487,19 @@ SAIGE_NB_internal <- function(data,
          size_hat <- fit_x$theta
       }
 
-      Omega   <- mu_x                                  # score-direction weight (Poisson var); see Details
+      # NB-GLM IRLS info weight: w = mu_x / (1 + mu_x/size_hat) = mu_x^2 / V_x,
+      # the Fisher information per obs for the linear predictor under NB+log.
+      # Residualizing X on Z in this metric makes the X residual coincide with
+      # the NB Rao-score projection (Schur complement). The same factor then
+      # reweights (Y - mu_y) to produce the Rao score numerator; combined,
+      # the SAIGE-NB statistic and its SPA studentization are bit-for-bit the
+      # NB Rao score with SPA-corrected tails.
+      info_w  <- 1 / (1 + mu_x / size_hat)
+      Omega   <- mu_x * info_w
       Zd      <- cbind(1, Z)
       WZ      <- Zd * Omega
       gamma_y <- solve(crossprod(Zd, WZ), crossprod(WZ, Y))
       mu_y    <- as.numeric(Zd %*% gamma_y)
-      # NB Rao-score reweighting: divide each term by (1 + mu_x/size_hat),
-      # i.e. multiply by the Fisher-information factor mu_x/V = theta/(mu_x+theta).
-      # Under correct NB this makes the statistic the (efficient) NB Rao score.
-      info_w  <- 1 / (1 + mu_x / size_hat)
       a       <- (Y - mu_y) * info_w
       T_      <- sum(a * (X - mu_x))
       p       <- .nb_spa_pvalues(w = a, mu = mu_x, size_ = size_hat, S_obs = T_)
