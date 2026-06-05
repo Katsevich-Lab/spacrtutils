@@ -749,3 +749,126 @@ signflip_score_internal <- function(data,
                             NB.disp.param = NA_real_))
    res
 }
+
+#####################################################################################
+#' Generic GLM sign-flipping score test, Monte-Carlo reference (HGF 2020)
+#'
+#' Monte-Carlo counterpart to \code{\link{signflip_score_internal}}, analogous
+#' to the relationship \code{\link{dCRT_internal}} bears to
+#' \code{\link{spaCRT_internal}}: this function computes the same effective
+#' score statistic \eqn{T = \sum_i \nu^*_i} but builds its reference
+#' distribution by drawing \code{B} random sign-flip patterns
+#' \eqn{g \in \{-1,+1\}^n} directly, rather than via the Lugannani-Rice
+#' saddlepoint approximation. No SPA, no CGF; just the empirical sign-flip
+#' tail.
+#'
+#' The effective score construction is identical to
+#' \code{\link{signflip_score_internal}}: fit \eqn{Y \sim Z} under \eqn{H_0}
+#' to get \eqn{\hat\mu_i, \hat\eta_i}, form the GLM weights
+#' \eqn{H_i = (d\mu_i/d\eta_i)/V(\hat\mu_i)} and
+#' \eqn{W_i = (d\mu_i/d\eta_i)^2/V(\hat\mu_i)}, residualize \eqn{X} on
+#' \eqn{Z} in the \eqn{W}-metric to get \eqn{\tilde X_i}, and form
+#' \eqn{\nu^*_i = \tilde X_i H_i (Y_i - \hat\mu_i)}. The MC two-sided p-value
+#' uses the standard \code{(#{|T_b| >= |T|} + 1) / (B + 1)} formula.
+#'
+#' @inheritParams signflip_score_internal
+#' @param B Number of Monte-Carlo sign-flip draws (default 5000).
+#'
+#' @return A named list with fields \code{test_stat}, \code{p.left}
+#' (left-sided), \code{p.right} (right-sided), \code{p.both} (two-sided),
+#' \code{mc.success} (TRUE if the nuisance fit and MC run completed), and
+#' \code{NB.disp.param} (the NB \eqn{\hat r} used, or \code{NA} for non-NB
+#' families).
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 500
+#' Z <- matrix(stats::rnorm(2 * n), n, 2)
+#' X <- stats::rnorm(n)
+#' Y <- stats::rpois(n, lambda = exp(0.5 + 0.3 * Z[, 1] + 0.2 * Z[, 2]))
+#' data <- list(X = X, Y = Y, Z = Z)
+#'
+#' # Monte-Carlo sign-flip, B = 5000.
+#' signflip_score_mc_internal(data, Y_on_Z_fam = "poisson")
+#'
+#' @export
+signflip_score_mc_internal <- function(data,
+                                       Y_on_Z_fam,
+                                       fitting_Y_on_Z = "glm",
+                                       fit_vals_Y_on_Z_own = NULL,
+                                       size_hat_own = NULL,
+                                       B = 5000) {
+
+   is_nb <- identical(Y_on_Z_fam, "negative.binomial")
+   if (!is.null(fit_vals_Y_on_Z_own) && is_nb && is.null(size_hat_own)) {
+      stop("size_hat_own must be supplied when fit_vals_Y_on_Z_own is given ",
+           "for Y_on_Z_fam = 'negative.binomial'.")
+   }
+   if (is.null(fit_vals_Y_on_Z_own) && !identical(fitting_Y_on_Z, "glm")) {
+      stop("Unsupported fitting_Y_on_Z: ", fitting_Y_on_Z,
+           ". Supply fit_vals_Y_on_Z_own instead.")
+   }
+   B <- as.integer(B); if (!is.finite(B) || B < 1L) {
+      stop("B must be a positive integer.")
+   }
+
+   X <- data$X; Y <- data$Y; Z <- data$Z
+   Zd <- cbind(1, Z); n <- length(X)
+
+   res <- tryCatch(withCallingHandlers({
+
+      # --- Fit Y ~ Z under H0 (identical to signflip_score_internal). ---
+      if (!is.null(fit_vals_Y_on_Z_own)) {
+         mu_y     <- as.numeric(fit_vals_Y_on_Z_own)
+         size_hat <- if (is_nb) as.numeric(size_hat_own) else NA_real_
+         fam      <- if (is_nb) MASS::negative.binomial(size_hat)
+                     else       do.call(Y_on_Z_fam, list())
+         eta_y    <- fam$linkfun(mu_y)
+      } else if (is_nb) {
+         fit_y    <- suppressWarnings(MASS::glm.nb(Y ~ Z))
+         mu_y     <- as.numeric(stats::fitted(fit_y))
+         eta_y    <- as.numeric(stats::predict(fit_y, type = "link"))
+         size_hat <- fit_y$theta
+         fam      <- MASS::negative.binomial(size_hat)
+      } else {
+         fam      <- do.call(Y_on_Z_fam, list())
+         fit_y    <- suppressWarnings(stats::glm(Y ~ Z, family = fam))
+         mu_y     <- as.numeric(stats::fitted(fit_y))
+         eta_y    <- as.numeric(stats::predict(fit_y, type = "link"))
+         size_hat <- NA_real_
+      }
+
+      # --- Effective score (same GLS residualization). ---
+      mu_eta  <- fam$mu.eta(eta_y)
+      V_mu    <- fam$variance(mu_y)
+      H       <- mu_eta / V_mu
+      W       <- mu_eta * H
+      WZ      <- Zd * W
+      delta   <- solve(crossprod(Zd, WZ), crossprod(WZ, X))
+      X_tilde <- as.numeric(X - Zd %*% delta)
+      nu_star <- X_tilde * H * (Y - mu_y)
+      T_      <- sum(nu_star)
+
+      # --- Monte-Carlo sign-flip reference. ---
+      # G is n x B with iid +-1; T_b = nu_star' G is length B.
+      G   <- matrix(sample(c(-1, 1), n * B, replace = TRUE), nrow = n)
+      T_b <- as.numeric(crossprod(nu_star, G))
+      p.right <- (sum(T_b >=  T_) + 1) / (B + 1)
+      p.left  <- (sum(T_b <=  T_) + 1) / (B + 1)
+      p.both  <- min(1, 2 * min(p.right, p.left))
+
+      list(test_stat     = T_,
+           p.left        = p.left,
+           p.right       = p.right,
+           p.both        = p.both,
+           mc.success    = TRUE,
+           NB.disp.param = size_hat)
+   }, warning = function(w) invokeRestart("muffleWarning")),
+   error = function(e) list(test_stat     = NA_real_,
+                            p.left        = NA_real_,
+                            p.right       = NA_real_,
+                            p.both        = NA_real_,
+                            mc.success    = FALSE,
+                            NB.disp.param = NA_real_))
+   res
+}

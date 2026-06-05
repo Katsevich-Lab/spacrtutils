@@ -390,3 +390,88 @@ test_that("multinomial one-vs-rest matches MC sign-flip on each category", {
    expect_lt(median(diffs), 0.02)
    expect_lt(quantile(diffs, 0.9), 0.05)
 })
+
+
+###############################################################################
+# Monte-Carlo sign-flip counterpart (signflip_score_mc_internal)
+###############################################################################
+
+test_that("signflip_score_mc_internal: Poisson returns valid output", {
+   d <- make_data(n = 500, kind = "pois", seed = 1)
+   r <- signflip_score_mc_internal(d, Y_on_Z_fam = "poisson", B = 2000)
+   expect_named(r, c("test_stat", "p.left", "p.right", "p.both",
+                     "mc.success", "NB.disp.param"))
+   expect_true(r$mc.success)
+   expect_true(is.finite(r$test_stat))
+   expect_gte(r$p.left,  0); expect_lte(r$p.left,  1)
+   expect_gte(r$p.right, 0); expect_lte(r$p.right, 1)
+   # p.left + p.right = 1 + 2/(B+1) under MC (each side counts T_b == T once
+   # because of the +1 convention), so the identity is approximate.
+   expect_lt(abs(r$p.left + r$p.right - 1), 0.05)
+   expect_equal(r$p.both, min(1, 2 * min(r$p.right, r$p.left)))
+   expect_true(is.na(r$NB.disp.param))
+})
+
+test_that("signflip_score_mc_internal works on Binomial, NB, Gaussian", {
+   for (kind in c("bern", "nb", "gauss")) {
+      fam <- switch(kind, bern = "binomial", nb = "negative.binomial",
+                          gauss = "gaussian")
+      d <- make_data(n = 500, kind = kind, seed = 7)
+      r <- signflip_score_mc_internal(d, Y_on_Z_fam = fam, B = 2000)
+      expect_true(r$mc.success, info = fam)
+      expect_true(is.finite(r$test_stat))
+      expect_gte(r$p.both, 0); expect_lte(r$p.both, 1)
+      if (kind == "nb") expect_true(r$NB.disp.param > 0)
+      else              expect_true(is.na(r$NB.disp.param))
+   }
+})
+
+test_that("signflip_score_mc_internal: test_stat matches signflip_score_internal", {
+   # Both compute the same effective score; only the reference distribution differs.
+   d <- make_data(n = 400, kind = "pois", seed = 13)
+   r_spa <- signflip_score_internal(d, Y_on_Z_fam = "poisson")
+   r_mc  <- signflip_score_mc_internal(d, Y_on_Z_fam = "poisson", B = 1000)
+   expect_equal(r_mc$test_stat, r_spa$test_stat, tolerance = 1e-10)
+})
+
+test_that("signflip_score_mc_internal: SPA and MC p-values agree on Poisson", {
+   skip_on_cran()
+   set.seed(909)
+   diffs <- vapply(seq_len(20L), function(i) {
+      d <- make_data(n = 300, kind = "pois", seed = 900 + i)
+      r_spa <- signflip_score_internal(d, Y_on_Z_fam = "poisson")
+      r_mc  <- signflip_score_mc_internal(d, Y_on_Z_fam = "poisson", B = 2e4)
+      if (is.na(r_spa$p.both) || is.na(r_mc$p.both)) return(NA_real_)
+      abs(r_spa$p.both - r_mc$p.both)
+   }, numeric(1))
+   diffs <- diffs[!is.na(diffs)]
+   # MC SE at p~0.5 is sqrt(0.25/2e4) ~ 0.0035. SPA bias is O(1/n) ~ 3e-3.
+   expect_lt(median(diffs), 0.02)
+})
+
+test_that("signflip_score_mc_internal: NB null calibrates at n=500", {
+   skip_on_cran()
+   set.seed(1010)
+   R <- 250L
+   pvals <- vapply(seq_len(R), function(i) {
+      d <- make_data(n = 500, kind = "nb", seed = 1000 + i)
+      r <- signflip_score_mc_internal(d, Y_on_Z_fam = "negative.binomial",
+                                      B = 2000)
+      r$p.both
+   }, numeric(1))
+   pvals <- pvals[!is.na(pvals)]
+   N <- length(pvals)
+   expect_gt(N, 0.95 * R)
+   expect_lt(abs(mean(pvals < 0.10) - 0.10),
+             4 * sqrt(0.10 * 0.90 / N))
+   expect_lt(abs(mean(pvals < 0.05) - 0.05),
+             4 * sqrt(0.05 * 0.95 / N))
+})
+
+test_that("signflip_score_mc_internal: B argument is validated", {
+   d <- make_data(n = 200, kind = "pois", seed = 1)
+   expect_error(signflip_score_mc_internal(d, Y_on_Z_fam = "poisson", B = 0),
+                "positive integer")
+   expect_error(signflip_score_mc_internal(d, Y_on_Z_fam = "poisson", B = -10),
+                "positive integer")
+})
