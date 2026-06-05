@@ -592,3 +592,160 @@ SAIGE_NB_simple_internal <- function(data,
    res
 }
 
+
+#####################################################################################
+#' Generic GLM sign-flipping score test (Hemerik-Goeman-Finos, 2020)
+#'
+#' \code{signflip_score_internal} carries out the Rao-score test for
+#' \eqn{H_0:\beta=0} in the GLM
+#' \deqn{g(\mathbb{E}[Y_i \mid X_i, Z_i]) = \beta X_i + Z_i^\top \gamma,}
+#' using the sign-flipping reference distribution of
+#' Hemerik--Goeman--Finos (2020, JRSSB) and the Lugannani--Rice saddlepoint
+#' approximation of the conditional CGF
+#' \eqn{K(t) = \sum_i \log\cosh(t \nu^*_i)} (see
+#' \code{.signflip_spa_pvalues}). The implementation is generic across GLM
+#' families exposed through the \pkg{stats} family interface (Poisson,
+#' Binomial, Gaussian, Gamma, inverse Gaussian, quasi-families), and handles
+#' negative binomial through \code{MASS::glm.nb} / \code{MASS::negative.binomial}.
+#'
+#' For a GLM with link \eqn{g}, variance function \eqn{V} and IRLS Fisher
+#' weight \eqn{W_i = (d\mu_i/d\eta_i)^2 / V(\mu_i)}, the effective score for
+#' \eqn{\beta} after profiling out \eqn{\gamma} is
+#' \deqn{\nu^*_i = \tilde X_i \, H_i \, (Y_i - \hat\mu_i), \quad
+#'       H_i = (d\mu_i/d\eta_i)/V(\hat\mu_i), \quad
+#'       \tilde X_i = X_i - Z_i^\top \hat\delta,}
+#' with \eqn{\hat\delta = (Z^\top W Z)^{-1} Z^\top W X}. For canonical links
+#' (Poisson log, Binomial logit, Gaussian identity) \eqn{H_i = 1} and the
+#' score collapses to \eqn{\tilde X_i (Y_i - \hat\mu_i)}; for the negative
+#' binomial with log link, \eqn{H_i = 1/(1 + \hat\mu_i/\hat r)}.
+#'
+#' The observed statistic is \eqn{T = \sum_i \nu^*_i}. Tail probabilities
+#' come from Lugannani--Rice applied to the exact sign-flipping CGF
+#' \eqn{K(t) = \sum_i \log\cosh(t\,\nu^*_i)}; see
+#' \code{.signflip_spa_pvalues}.
+#'
+#' Implementation reference:
+#' \code{writeups/sign-flipping-implementaiton/sign_flipping_spa.tex}.
+#'
+#' @param data
+#'    A (non-empty) named list with fields \code{X} (an nx1 vector for the
+#'    predictor variable of interest), \code{Y} (an nx1 response vector),
+#'    and \code{Z} (an nxp matrix of covariates).
+#' @param Y_on_Z_fam
+#'    String giving the GLM family for the regression of Y on Z under
+#'    \eqn{H_0:\beta=0}. One of \code{"poisson"}, \code{"binomial"},
+#'    \code{"gaussian"}, \code{"Gamma"}, \code{"inverse.gaussian"}, or
+#'    \code{"negative.binomial"}. Quasi-families (e.g.\ \code{"quasipoisson"})
+#'    are supported via \code{do.call}.
+#' @param fitting_Y_on_Z
+#'    Fitting method for the Y on Z regression. Currently only \code{"glm"}
+#'    (default) is supported when fitting is auto-performed; custom fits
+#'    should be passed through \code{fit_vals_Y_on_Z_own}.
+#' @param fit_vals_Y_on_Z_own
+#'    Optional vector of user-supplied fitted means \eqn{\hat\mu_i}. When
+#'    supplied, the function does not refit \eqn{Y} on \eqn{Z}. For
+#'    \code{Y_on_Z_fam = "negative.binomial"}, \code{size_hat_own} must also
+#'    be supplied.
+#' @param size_hat_own
+#'    Optional scalar NB dispersion / size \eqn{\hat r}. Required when
+#'    \code{fit_vals_Y_on_Z_own} is supplied together with
+#'    \code{Y_on_Z_fam = "negative.binomial"}.
+#'
+#' @return A named list with fields \code{test_stat}, \code{p.left}
+#' (left-sided), \code{p.right} (right-sided), \code{p.both} (two-sided),
+#' \code{spa.success} (TRUE if the saddlepoint equation was solved), and
+#' \code{NB.disp.param} (the NB \eqn{\hat r} used, or \code{NA} for non-NB
+#' families).
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 500
+#' Z <- matrix(stats::rnorm(2 * n), n, 2)
+#' X <- stats::rnorm(n)
+#' Y <- stats::rpois(n, lambda = exp(0.5 + 0.3 * Z[, 1] + 0.2 * Z[, 2]))
+#' data <- list(X = X, Y = Y, Z = Z)
+#'
+#' # Poisson coefficient test, auto-fit Y ~ Z.
+#' signflip_score_internal(data, Y_on_Z_fam = "poisson")
+#'
+#' # User-supplied fitted means.
+#' mu_y <- stats::fitted(stats::glm(Y ~ Z, family = stats::poisson()))
+#' signflip_score_internal(data, Y_on_Z_fam = "poisson",
+#'                         fit_vals_Y_on_Z_own = mu_y)
+#'
+#' @export
+signflip_score_internal <- function(data,
+                                    Y_on_Z_fam,
+                                    fitting_Y_on_Z = "glm",
+                                    fit_vals_Y_on_Z_own = NULL,
+                                    size_hat_own = NULL) {
+
+   is_nb <- identical(Y_on_Z_fam, "negative.binomial")
+   if (!is.null(fit_vals_Y_on_Z_own) && is_nb && is.null(size_hat_own)) {
+      stop("size_hat_own must be supplied when fit_vals_Y_on_Z_own is given ",
+           "for Y_on_Z_fam = 'negative.binomial'.")
+   }
+   if (is.null(fit_vals_Y_on_Z_own) && !identical(fitting_Y_on_Z, "glm")) {
+      stop("Unsupported fitting_Y_on_Z: ", fitting_Y_on_Z,
+           ". Supply fit_vals_Y_on_Z_own instead.")
+   }
+
+   X <- data$X; Y <- data$Y; Z <- data$Z
+   Zd <- cbind(1, Z)
+
+   res <- tryCatch(withCallingHandlers({
+
+      # --- Fit Y ~ Z under H0 to obtain (mu_y, eta_y, family object). ---
+      if (!is.null(fit_vals_Y_on_Z_own)) {
+         mu_y     <- as.numeric(fit_vals_Y_on_Z_own)
+         size_hat <- if (is_nb) as.numeric(size_hat_own) else NA_real_
+         fam      <- if (is_nb) MASS::negative.binomial(size_hat)
+                     else       do.call(Y_on_Z_fam, list())
+         eta_y    <- fam$linkfun(mu_y)
+      } else if (is_nb) {
+         fit_y    <- suppressWarnings(MASS::glm.nb(Y ~ Z))
+         mu_y     <- as.numeric(stats::fitted(fit_y))
+         eta_y    <- as.numeric(stats::predict(fit_y, type = "link"))
+         size_hat <- fit_y$theta
+         fam      <- MASS::negative.binomial(size_hat)
+      } else {
+         fam      <- do.call(Y_on_Z_fam, list())
+         fit_y    <- suppressWarnings(stats::glm(Y ~ Z, family = fam))
+         mu_y     <- as.numeric(stats::fitted(fit_y))
+         eta_y    <- as.numeric(stats::predict(fit_y, type = "link"))
+         size_hat <- NA_real_
+      }
+
+      # --- GLM score machinery: H = (dmu/deta)/V(mu), W = (dmu/deta)^2/V(mu). ---
+      mu_eta <- fam$mu.eta(eta_y)
+      V_mu   <- fam$variance(mu_y)
+      H      <- mu_eta / V_mu                 # canonical link => H = 1
+      W      <- mu_eta * H                    # = (dmu/deta)^2 / V(mu)
+
+      # --- Residualize X on Z in the W-metric (profile out gamma). ---
+      WZ      <- Zd * W
+      delta   <- solve(crossprod(Zd, WZ), crossprod(WZ, X))
+      X_tilde <- as.numeric(X - Zd %*% delta)
+
+      # --- Effective score and observed sign-flip statistic. ---
+      nu_star <- X_tilde * H * (Y - mu_y)
+      T_      <- sum(nu_star)
+
+      # --- Lugannani-Rice SPA on K(t) = sum log cosh(t nu_i). ---
+      p       <- .signflip_spa_pvalues(nu = nu_star, S_obs = T_)
+      ok      <- is.finite(p$p.left) && is.finite(p$p.right)
+      list(test_stat     = T_,
+           p.left        = p$p.left,
+           p.right       = p$p.right,
+           p.both        = 2 * min(p$p.left, p$p.right),
+           spa.success   = ok,
+           NB.disp.param = size_hat)
+   }, warning = function(w) invokeRestart("muffleWarning")),
+   error = function(e) list(test_stat     = NA_real_,
+                            p.left        = NA_real_,
+                            p.right       = NA_real_,
+                            p.both        = NA_real_,
+                            spa.success   = FALSE,
+                            NB.disp.param = NA_real_))
+   res
+}
